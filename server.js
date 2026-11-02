@@ -144,6 +144,21 @@ app.post("/api/books/:id/ai-feedback", route(async (req) => {
   log.info({ event: "ai-feedback.done", user: req.user.id, book: book.id, ms: result.ms, diversity: result.diversity }, "AI feedback done");
   return { id: saved.id, createdAt: saved.created_at, result };
 }));
+// The same for the survey book (public/survey): the exact pages and photo the
+// real respondents see, so the two sets of answers can be compared.
+const SURVEY_WORDS = [PAGES[0]?.text, PAGES[1]?.text, PAGES[2]?.text, "About Me page: the child's portrait, name and a few facts"];
+app.post("/api/ai-feedback/survey", route(async (req) => {
+  const fs = await import("node:fs/promises");
+  const file = (f) => fs.readFile(path.resolve("public/survey", f));
+  const dataUrl = (buf) => `data:image/jpeg;base64,${buf.toString("base64")}`;
+  const pages = [];
+  for (let i = 1; i <= 4; i++) pages.push({ label: `Page ${i}${i === 4 ? " (About Me)" : ""}`, words: SURVEY_WORDS[i - 1], image: dataUrl(await file(`page-${i}.jpg`)) });
+  log.info({ event: "ai-feedback.start", user: req.user.id, book: "survey" }, "AI feedback on the survey book started");
+  const result = await runAiFeedback({ photo: dataUrl(await file("photo.jpg")), pages }, (p) => log.info({ event: "ai-feedback.progress", ...p }, "AI reviewer answered"));
+  log.info({ event: "ai-feedback.done", ms: result.ms, diversity: result.diversity }, "AI feedback done");
+  return { result };
+}));
+
 app.get("/api/books/:id/ai-feedback", route(async (req) => {
   const book = await requireBook(req, req.params.id);
   return { feedback: await db.latestAiFeedback(req.user.id, book.id) };
