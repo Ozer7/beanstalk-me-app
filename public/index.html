@@ -44,6 +44,42 @@
   header.top p { margin: 10px 0 0; max-width: 34em; color: var(--ink-2); font-size: 1.1rem; }
   .saved { color: var(--ink-2); font-size: .95rem; display: flex; gap: 10px; align-items: center; }
   .mock-banner { display: inline-block; margin-top: 12px; padding: 4px 12px; border-radius: 999px; background: var(--sky-2); font-size: .9rem; }
+  .account { display: grid; gap: 8px; justify-items: end; }
+  .who { display: flex; gap: 10px; align-items: center; font-size: .95rem; }
+  .who img, .who .initial { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--leaf); color: #fff; display: grid; place-items: center; font-weight: 600; }
+  .saved-state { color: var(--ink-2); font-size: .9rem; }
+  .saved-state.bad { color: var(--warn); }
+  @media (max-width: 620px) { .account { justify-items: start; } }
+
+  /* ---------- progress: one bar per picture, one for the whole book ---------- */
+  .meter { width: min(220px, 80%); height: 10px; border-radius: 999px; background: rgba(27,42,33,.12); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--leaf-3), var(--leaf)); transition: width .35s linear; }
+  .working .pct { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--leaf-2); }
+  .jobs-bar {
+    position: sticky; top: 0; z-index: 40; margin: 0 -24px 18px; padding: 12px 24px;
+    background: rgba(255,253,248,.96); box-shadow: 0 6px 18px -12px rgba(27,42,33,.5); backdrop-filter: blur(4px);
+    display: grid; gap: 8px;
+  }
+  .jobs-bar .line { display: flex; justify-content: space-between; gap: 12px; font-weight: 500; flex-wrap: wrap; }
+  .jobs-bar .meter { width: 100%; height: 12px; }
+  .jobs-bar ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .9rem; color: var(--ink-2); }
+  .jobs-bar li b { font-weight: 600; color: var(--ink); }
+  .jobs-bar li.done b { color: var(--ok); }
+  .jobs-bar li.failed b { color: var(--warn); }
+  @media (max-width: 560px) { .jobs-bar { margin: 0 -16px 18px; padding: 10px 16px; } }
+
+  /* ---------- my books ---------- */
+  .shelf { position: fixed; inset: 0; z-index: 60; background: rgba(18,28,22,.55); display: grid; place-items: center; padding: 16px; }
+  .shelf .box { background: var(--sky); border-radius: 18px; width: min(720px, 100%); max-height: 86vh; overflow: auto; padding: 22px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.6); }
+  .shelf h2 { margin: 0; font-size: 1.6rem; font-weight: 600; }
+  .shelf .head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .shelf ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+  .shelf li { display: grid; gap: 6px; }
+  .shelf .cover { aspect-ratio: 2/3; border-radius: 6px; overflow: hidden; background: var(--paper); box-shadow: var(--page-shadow); border: 0; padding: 0; cursor: pointer; display: grid; place-items: center; color: var(--ink-2); }
+  .shelf .cover img { width: 100%; height: 100%; object-fit: cover; }
+  .shelf li.current .cover { outline: 3px solid var(--leaf); outline-offset: 2px; }
+  .shelf .meta { font-size: .9rem; color: var(--ink-2); }
+  .shelf .meta b { color: var(--ink); font-weight: 600; display: block; }
 
   /* ---------- the beanstalk (progress) ---------- */
   .steps { position: relative; padding-left: 78px; }
@@ -248,11 +284,21 @@
       <p>Turn one photo into a <em>Jack and the Beanstalk</em> picture book starring your child. This version makes the first three pages and the About Me page.</p>
       <div class="mock-banner" id="mockBanner" hidden>Test mode: placeholder pictures, no OpenAI calls.</div>
     </div>
-    <div class="saved" id="saved" hidden>
-      <span>Saved in this browser.</span>
-      <button class="link" id="startOver" type="button">Start over</button>
+    <div class="account">
+      <div class="who"><span id="whoPic"></span><span id="whoName"></span><button class="link" id="signOut" type="button">Sign out</button></div>
+      <div class="row">
+        <button class="btn small" id="openShelf" type="button">My books</button>
+        <button class="btn small" id="newBook" type="button">New book</button>
+      </div>
+      <span class="saved-state" id="saved" aria-live="polite"></span>
     </div>
   </header>
+
+  <div class="jobs-bar" id="jobsBar" hidden aria-live="polite">
+    <div class="line"><span id="jobsTitle"></span><span id="jobsPct"></span></div>
+    <div class="meter"><i id="jobsMeter"></i></div>
+    <ul id="jobsList"></ul>
+  </div>
 
   <main class="steps" id="steps">
     <div class="vine" id="vine" aria-hidden="true"><div class="stem"></div><div class="leaves" id="leaves"></div></div>
@@ -336,7 +382,7 @@
     <section class="step" id="s3" style="--c: var(--bean-3)">
       <div class="bean" aria-hidden="true"><span>3</span></div>
       <h2>The pages</h2>
-      <p class="lede">All three pages are drawn at once (about a minute), then each one is checked automatically. The words are set by the book, never drawn by the AI.</p>
+      <p class="lede">All three pages are drawn in parallel on the server, each with its own progress bar, then each one is checked automatically. The words are set by the book, never drawn by the AI.</p>
       <div class="toolbar">
         <button class="btn primary" id="makePages" type="button" disabled>Draw the pages</button>
         <span class="muted" id="pagesStatus" aria-live="polite"></span>
@@ -377,7 +423,7 @@
   </main>
 
   <footer>
-    <p>MCON 368. The photo is sent to OpenAI only to draw the pictures. Nothing is stored on this site; your book is kept in this browser until you start over.</p>
+    <p>MCON 368. The photo is sent to OpenAI only to draw the pictures. Your books, and every picture in them, are saved to your Google account on this site, so you can close the tab and come back on any device. Delete a book from My books.</p>
     <p id="modelLine"></p>
   </footer>
 </div>
@@ -391,6 +437,19 @@
   </div>
   <button class="side-btn prev" id="readerPrev2" type="button" aria-label="Previous page">‹</button>
   <button class="side-btn next" id="readerNext2" type="button" aria-label="Next page">›</button>
+</div>
+
+<div class="shelf" id="shelf" role="dialog" aria-modal="true" aria-labelledby="shelfTitle" hidden>
+  <div class="box">
+    <div class="head">
+      <h2 id="shelfTitle">My books</h2>
+      <div class="row">
+        <button class="btn small primary" id="shelfNew" type="button">New book</button>
+        <button class="btn small" id="shelfClose" type="button">Close</button>
+      </div>
+    </div>
+    <ul id="shelfList"></ul>
+  </div>
 </div>
 
 <template id="pageTpl">
@@ -421,55 +480,138 @@ const FIX_EXAMPLES = {
 };
 
 // ---------------------------------------------------------------------------
-// state: everything about the book, saved in this browser (IndexedDB)
+// state: everything about the book. Saved to the signed-in user's account on
+// the server (pictures are stored there too and referenced as /img/<id>).
 // ---------------------------------------------------------------------------
 const blank = () => ({
-  v: 2, name: "", photo: null, photoNorm: null,
+  v: 3, name: "", photo: null,
   jack: null, jackHistory: [], jackApproved: false, jackVersion: 0,
   sheet: null, pages: {}, about: { age: "", food: "", likes: "", growUp: "", more: "" },
 });
 let S = blank();
 let BOARD = null;
-const busy = { jack: false, sheet: false, pages: new Set(), book: false };
+let ME = null;
+let BOOK_ID = null;
+let localPhoto = null; // instant preview while the photo uploads
+const busy = { photo: false, jack: false, sheet: false, pages: new Set(), book: false };
 // Views of Jack: the reference, then the other views cut from his character
 // sheet by the server (lib/sheet.js).
 let angle = 0;
-let fetchingViews = false;
-const VIEWS_V = 2; // bump when the server's way of cutting the sheet changes
 const views = () => [{ label: "Jack", image: S.jack && S.jack.image }, ...((S.sheet && S.sheet.views) || [])];
 
 const store = (() => {
-  let dbp = null;
-  const db = () => (dbp ??= new Promise((ok, no) => {
-    const r = indexedDB.open("beanstalk-me", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("book");
-    r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error);
-  }));
-  const tx = async (mode, fn) => { const d = await db(); return new Promise((ok, no) => { const t = d.transaction("book", mode); const req = fn(t.objectStore("book")); t.oncomplete = () => ok(req && req.result); t.onerror = () => no(t.error); }); };
-  let timer = null;
+  let timer = null, inflight = null, again = false;
+  const setSaved = (text, bad = false) => { const el = $("#saved"); el.textContent = text; el.classList.toggle("bad", bad); };
+  async function flush() {
+    clearTimeout(timer); timer = null;
+    if (!BOOK_ID) return;
+    if (inflight) { again = true; return inflight; }
+    const id = BOOK_ID, body = JSON.stringify({ state: S });
+    setSaved("Saving…");
+    inflight = fetch(`/api/books/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body, keepalive: body.length < 60000 })
+      .then((r) => { if (r.status === 401) location.href = "/"; if (!r.ok) throw new Error(); setSaved("Saved to your account."); })
+      .catch(() => setSaved("Couldn't save. Check your connection; it will try again.", true))
+      .finally(() => { inflight = null; if (again) { again = false; store.save(); } });
+    return inflight;
+  }
   return {
-    async load() { try { return await tx("readonly", (s) => s.get("current")); } catch { return null; } },
-    save() { clearTimeout(timer); timer = setTimeout(() => tx("readwrite", (s) => s.put(S, "current")).catch(() => {}), 250); },
-    async clear() { try { await tx("readwrite", (s) => s.delete("current")); } catch {} },
+    save() { clearTimeout(timer); timer = setTimeout(flush, 500); },
+    flush,
+    pending: () => !!timer || !!inflight,
   };
 })();
+window.addEventListener("beforeunload", () => { if (store.pending()) store.flush(); });
 
 function commit() { store.save(); render(); }
 
 // ---------------------------------------------------------------------------
-// startup
+// startup: who's signed in, then their book (the one in the URL, else the
+// most recent, else a new one)
 // ---------------------------------------------------------------------------
 (async () => {
-  const [board, saved] = await Promise.all([fetch("/api/storyboard").then((r) => r.json()), store.load()]);
-  BOARD = board;
-  if (saved && saved.v === 2) S = { ...blank(), ...saved };
-  $("#mockBanner").hidden = !board.mock;
-  $("#modelLine").textContent = `Pictures by ${board.model}, checked by ${board.checkModel}.`;
-  $("#name").value = S.name; $("#aboutName").value = S.name;
-  for (const [k, v] of Object.entries(S.about)) { const f = $(`#about [name=${k}]`); if (f) f.value = v; }
+  try {
+    const [board, me] = await Promise.all([fetch("/api/storyboard").then((r) => r.json()), api("/api/me")]);
+    BOARD = board; ME = me;
+  } catch { return; } // api() already sent a signed-out visitor to the welcome page
+  $("#mockBanner").hidden = !BOARD.mock;
+  $("#modelLine").textContent = `Pictures by ${BOARD.model}, checked by ${BOARD.checkModel}.`;
+  const u = ME.user;
+  $("#whoName").textContent = u.name || u.email || "Signed in";
+  $("#whoPic").innerHTML = u.picture ? `<img alt="" referrerpolicy="no-referrer">` : `<span class="initial"></span>`;
+  if (u.picture) $("#whoPic img").src = u.picture; else $("#whoPic .initial").textContent = (u.name || u.email || "?")[0].toUpperCase();
   buildPages();
-  render();
+  await openBook(new URLSearchParams(location.search).get("book") || "current");
 })();
+
+async function openBook(id) {
+  if (store.pending()) await store.flush();
+  const { book } = await api(`/api/books/${id}`);
+  BOOK_ID = book.id;
+  S = { ...blank(), ...book.state };
+  localPhoto = null; angle = 0;
+  history.replaceState(null, "", `?book=${book.id}`);
+  $("#name").value = S.name; $("#aboutName").value = S.name;
+  $("#about").reset();
+  for (const [k, v] of Object.entries(S.about)) { const f = $(`#about [name=${k}]`); if (f) f.value = v; }
+  $("#aboutName").value = S.name;
+  ["#jackError", "#bookError"].forEach(hideError);
+  document.querySelectorAll(".page .error").forEach((e) => (e.hidden = true));
+  $("#saved").textContent = "Saved to your account.";
+  render();
+  if (book.running.length) resumeJobs(book.running);
+}
+
+// ---------------------------------------------------------------------------
+// account: sign out, new book, my books
+// ---------------------------------------------------------------------------
+$("#signOut").addEventListener("click", async () => {
+  await store.flush();
+  await fetch("/auth/logout", { method: "POST" });
+  location.href = "/";
+});
+
+async function newBook() {
+  if (anyBusyNow()) return;
+  await store.flush();
+  const { book } = await api("/api/books", {});
+  closeShelf();
+  await openBook(book.id);
+  $("#photoInput").value = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+$("#newBook").addEventListener("click", newBook);
+$("#shelfNew").addEventListener("click", newBook);
+
+$("#openShelf").addEventListener("click", async () => {
+  await store.flush();
+  const { books } = await api("/api/me");
+  const list = $("#shelfList"); list.innerHTML = "";
+  for (const b of books) {
+    const li = document.createElement("li");
+    if (b.id === BOOK_ID) li.className = "current";
+    li.innerHTML = `<button class="cover" type="button"></button><div class="meta"><b></b><span></span></div><button class="link del" type="button">Delete</button>`;
+    const cover = $(".cover", li);
+    if (b.jack) { const i = new Image(); i.src = b.jack; i.alt = ""; cover.append(i); } else cover.textContent = "No pictures yet";
+    $("b", li).textContent = b.name || "Untitled book";
+    $(".meta span", li).textContent = `${b.pages} page${b.pages === 1 ? "" : "s"} · ${new Date(b.updated_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}`;
+    cover.setAttribute("aria-label", `Open ${b.name || "Untitled book"}`);
+    cover.addEventListener("click", async () => { closeShelf(); if (b.id !== BOOK_ID) await openBook(b.id); });
+    let armedDel = null;
+    $(".del", li).addEventListener("click", async (e) => {
+      if (!armedDel) { e.target.textContent = "Tap again to delete"; armedDel = setTimeout(() => { armedDel = null; e.target.textContent = "Delete"; }, 3500); return; }
+      clearTimeout(armedDel);
+      await api(`/api/books/${b.id}`, undefined, { method: "DELETE" });
+      li.remove();
+      if (b.id === BOOK_ID) { BOOK_ID = null; await openBook("current"); }
+    });
+    list.append(li);
+  }
+  if (!books.length) list.innerHTML = "<li class='muted'>No books yet.</li>";
+  $("#shelf").hidden = false; $("#shelfClose").focus();
+});
+function closeShelf() { $("#shelf").hidden = true; }
+$("#shelfClose").addEventListener("click", closeShelf);
+$("#shelf").addEventListener("click", (e) => { if (e.target.id === "shelf") closeShelf(); });
 
 // ---------------------------------------------------------------------------
 // step 1: photo + name
@@ -481,14 +623,24 @@ $("#photoInput").addEventListener("change", (e) => setPhoto(e.target.files[0]));
 drop.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer.files[0]) setPhoto(e.dataTransfer.files[0]); });
 
 async function setPhoto(file) {
-  if (!file) return;
+  if (!file || anyBusyNow()) return;
   if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { showError("#jackError", "Please choose a PNG, JPEG or WEBP photo."); return; }
-  const photo = await new Promise((ok) => { const r = new FileReader(); r.onload = () => ok(r.result); r.readAsDataURL(file); });
-  const hadJack = !!S.jack;
-  Object.assign(S, { photo, photoNorm: null, jack: null, jackHistory: [], jackApproved: false, sheet: null });
-  angle = 0;
-  if (hadJack) S.jackVersion++;
-  commit();
+  hideError("#jackError");
+  localPhoto = URL.createObjectURL(file);
+  busy.photo = true; render();
+  try {
+    const body = new FormData();
+    body.append("bookId", BOOK_ID);
+    body.append("photo", file, "photo");
+    const d = await api("/api/photo", body, { form: true });
+    const hadJack = !!S.jack;
+    Object.assign(S, { photo: d.photo, jack: null, jackHistory: [], jackApproved: false, sheet: null });
+    angle = 0;
+    if (hadJack) S.jackVersion++;
+  } catch (e) {
+    localPhoto = null;
+    showError("#jackError", e.message);
+  } finally { busy.photo = false; commit(); }
 }
 
 $("#name").addEventListener("input", (e) => { S.name = e.target.value.trimStart(); $("#aboutName").value = S.name; commit(); });
@@ -501,44 +653,50 @@ $("#retryJack").addEventListener("click", makeJack);
 $("#approveJack").addEventListener("click", approveJack);
 $("#changeJack").addEventListener("click", () => { S.jackApproved = false; commit(); });
 $("#undoJack").addEventListener("click", () => { S.jack = S.jackHistory.pop(); S.jackVersion++; S.sheet = null; angle = 0; commit(); });
-$("#retrySheet").addEventListener("click", async () => { await makeSheet(); if (S.sheet) makePages(BOARD.pages.filter((p) => p.enabled && (!S.pages[p.id] || isStale(p.id))).map((p) => p.id)); });
+$("#retrySheet").addEventListener("click", async () => { await makeSheet(); if (S.sheet) makePages(pagesToDraw()); });
 $("#anglePrev").addEventListener("click", () => { const n = views().length; angle = (angle - 1 + n) % n; drawJackFrame(); });
 $("#angleNext").addEventListener("click", () => { angle = (angle + 1) % views().length; drawJackFrame(); });
 $("#jackChips").addEventListener("click", (e) => { const b = e.target.closest("[data-fix]"); if (b) fixJack(b.dataset.fix); });
 $("#fixJackForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#fixJackInput").value.trim(); if (v) fixJack(v); else $("#fixJackInput").focus(); });
 
+// What to do with each kind of finished picture. Used both when the request
+// returns and when a returning visitor's picture finishes (resumeJobs).
+const apply = {
+  reference(d) { Object.assign(S, { jack: { image: d.image }, jackHistory: [], sheet: null }); angle = 0; S.jackVersion++; },
+  "reference-edit"(d) { if (S.jack) S.jackHistory.push(S.jack); S.jack = { image: d.image }; S.jackVersion++; S.sheet = null; angle = 0; $("#fixJackInput").value = ""; },
+  sheet(d) { S.sheet = { image: d.image, views: d.views || [], viewsV: 2, jackVersion: S.jackVersion }; },
+  page(d, id) { const prev = S.pages[id]; S.pages[id] = { image: d.image, look: d.look, check: d.check, jackVersion: d.jackVersion ?? S.jackVersion, history: prev ? [...(prev.history || []), { image: prev.image, look: prev.look, check: prev.check, jackVersion: prev.jackVersion }] : [] }; },
+  "page-edit"(d, id) {
+    const st = S.pages[id];
+    if (!st) return apply.page(d, id);
+    st.history.push({ image: st.image, look: st.look, check: st.check, jackVersion: st.jackVersion });
+    Object.assign(st, { image: d.image, look: d.look, check: d.check, jackVersion: d.jackVersion ?? S.jackVersion });
+    const card = cardFor(id); if (card) { $(".fix input", card).value = ""; $(".fix", card).hidden = true; }
+  },
+};
+
 async function makeJack() {
-  const body = new FormData();
-  body.append("photo", await (await fetch(S.photo)).blob(), "photo");
-  await work("jack", $("#jackFrame"), "Drawing Jack", "usually about 40 seconds", "#jackError", async () => {
-    const d = await api("/api/reference", body, true);
-    Object.assign(S, { photoNorm: d.photo, jack: { image: d.image }, jackHistory: [], sheet: null });
-    angle = 0;
-    S.jackVersion++;
+  await work("jack", $("#jackFrame"), "Drawing Jack", "#jackError", async (onProgress) => {
+    apply.reference(await api("/api/reference", { bookId: BOOK_ID, photo: S.photo }, { onProgress }));
   });
 }
 
 async function fixJack(instruction) {
-  await work("jack", $("#jackFrame"), "Fixing Jack", "usually about 40 seconds", "#jackError", async () => {
-    const d = await api("/api/reference/edit", { reference: S.jack.image, photo: S.photoNorm, instruction });
-    S.jackHistory.push(S.jack);
-    S.jack = { image: d.image };
-    S.jackVersion++; S.sheet = null; angle = 0;
-    $("#fixJackInput").value = "";
+  await work("jack", $("#jackFrame"), "Fixing Jack", "#jackError", async (onProgress) => {
+    apply["reference-edit"](await api("/api/reference/edit", { bookId: BOOK_ID, reference: S.jack.image, photo: S.photo, instruction }, { onProgress }));
   });
 }
 
 async function approveJack() {
   S.jackApproved = true; commit();
   if (!S.sheet) await makeSheet();
-  if (S.sheet) makePages(BOARD.pages.filter((p) => p.enabled && (!S.pages[p.id] || isStale(p.id))).map((p) => p.id));
+  if (S.sheet) makePages(pagesToDraw());
 }
 
 async function makeSheet() {
   angle = 0;
-  await work("sheet", $("#jackFrame"), "Drawing Jack from other angles", "usually about 30 seconds", "#jackError", async () => {
-    const d = await api("/api/sheet", { reference: S.jack.image, photo: S.photoNorm });
-    S.sheet = { image: d.image, views: d.views, viewsV: VIEWS_V, jackVersion: S.jackVersion };
+  await work("sheet", $("#jackFrame"), "Drawing Jack from other angles", "#jackError", async (onProgress) => {
+    apply.sheet(await api("/api/sheet", { bookId: BOOK_ID, reference: S.jack.image, photo: S.photo, jackVersion: S.jackVersion }, { onProgress }));
   });
 }
 
@@ -560,7 +718,7 @@ function buildPages() {
     }
     $(".empty", card).textContent = `Page ${p.id} appears here.`;
     $(".fix input", card).placeholder = FIX_EXAMPLES[p.id] || "What should change?";
-    $(".bookpage", card).addEventListener("click", () => S.pages[p.id] && openReader(BOARD.pages.filter((x) => x.enabled).findIndex((x) => x.id === p.id)));
+    $(".bookpage", card).addEventListener("click", () => S.pages[p.id] && !busy.pages.has(p.id) && openReader(BOARD.pages.filter((x) => x.enabled).findIndex((x) => x.id === p.id)));
     $(".redo", card).addEventListener("click", () => makePages([p.id]));
     $(".fix-toggle", card).addEventListener("click", () => { const f = $(".fix", card); f.hidden = !f.hidden; if (!f.hidden) $("input", f).focus(); });
     $(".fix", card).addEventListener("submit", (e) => { e.preventDefault(); const v = $(".fix input", card).value.trim(); if (v) fixPage(p.id, v); });
@@ -570,35 +728,34 @@ function buildPages() {
   }
 }
 
+const pagesToDraw = () => BOARD.pages.filter((p) => p.enabled && (!S.pages[p.id] || isStale(p.id))).map((p) => p.id);
 $("#makePages").addEventListener("click", () => {
-  const todo = BOARD.pages.filter((p) => p.enabled && (!S.pages[p.id] || isStale(p.id))).map((p) => p.id);
+  const todo = pagesToDraw();
   makePages(todo.length ? todo : BOARD.pages.filter((p) => p.enabled).map((p) => p.id));
 });
 
+// All the pages at once: the server draws them in parallel (a few at a time)
+// and each card gets its own progress bar.
 async function makePages(ids) {
   if (!S.sheet && S.jackApproved) { await makeSheet(); if (!S.sheet) return; }
   await Promise.all(ids.map((id) => {
     const card = cardFor(id);
-    return work(`page${id}`, $(".bookpage", card), `Drawing page ${id}`, "usually under a minute", $(".error", card), async () => {
-      const d = await api("/api/page", { pageId: id, reference: S.jack.image, sheet: S.sheet.image });
-      S.pages[id] = { image: d.image, look: d.look, check: d.check, jackVersion: S.jackVersion, history: [] };
+    return work(`page${id}`, $(".bookpage", card), `Drawing page ${id}`, $(".error", card), async (onProgress) => {
+      apply.page(await api("/api/page", { bookId: BOOK_ID, pageId: id, reference: S.jack.image, sheet: S.sheet.image, jackVersion: S.jackVersion }, { onProgress }), id);
     });
   }));
 }
 
 async function fixPage(id, instruction) {
   const card = cardFor(id), st = S.pages[id];
-  await work(`page${id}`, $(".bookpage", card), `Fixing page ${id}`, "usually under a minute", $(".error", card), async () => {
-    const d = await api("/api/page/edit", { pageId: id, image: st.image, reference: S.jack.image, sheet: S.sheet && S.sheet.image, instruction });
-    st.history.push({ image: st.image, look: st.look, check: st.check, jackVersion: st.jackVersion });
-    Object.assign(st, { image: d.image, look: d.look, check: d.check, jackVersion: S.jackVersion });
-    $(".fix input", card).value = ""; $(".fix", card).hidden = true;
+  await work(`page${id}`, $(".bookpage", card), `Fixing page ${id}`, $(".error", card), async (onProgress) => {
+    apply["page-edit"](await api("/api/page/edit", { bookId: BOOK_ID, pageId: id, image: st.image, reference: S.jack.image, sheet: S.sheet && S.sheet.image, jackVersion: S.jackVersion, instruction }, { onProgress }), id);
   });
 }
 
 const isStale = (id) => !!S.pages[id] && S.pages[id].jackVersion !== S.jackVersion;
 const cardFor = (id) => $(`.page[data-id="${id}"]`);
-
+const anyBusyNow = () => busy.photo || busy.jack || busy.sheet || busy.pages.size > 0 || busy.book;
 // ---------------------------------------------------------------------------
 // step 4 + 5: About Me, reader, PDF
 // ---------------------------------------------------------------------------
@@ -615,7 +772,7 @@ $("#download").addEventListener("click", async () => {
   $("#bookStatus").textContent = "Putting the book together…";
   try {
     const pages = BOARD.pages.filter((p) => p.enabled).map((p) => ({ id: p.id, image: S.pages[p.id].image }));
-    const blob = await api("/api/book", { child: { name: S.name.trim(), ...S.about }, reference: S.jack.image, pages });
+    const blob = await api("/api/book", { bookId: BOOK_ID, child: { name: S.name.trim(), ...S.about }, reference: S.jack.image, pages });
     const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `jack-and-the-beanstalk-${slug(S.name)}.pdf` });
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 60000);
@@ -655,20 +812,6 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight" && readerAt < readerPages().length - 1) { readerAt++; drawReader(); }
 });
 $("#reader").addEventListener("click", (e) => { if (e.target.id === "reader" || e.target.id === "readerStage") closeReader(); });
-
-// start over: two taps, no browser dialog
-let armed = null;
-$("#startOver").addEventListener("click", async (e) => {
-  if (!armed) {
-    e.target.textContent = "Tap again to delete this book";
-    armed = setTimeout(() => { armed = null; e.target.textContent = "Start over"; }, 3500);
-    return;
-  }
-  clearTimeout(armed); armed = null; e.target.textContent = "Start over";
-  await store.clear(); S = blank();
-  $("#name").value = ""; $("#about").reset(); $("#photoInput").value = ""; hideError("#jackError"); hideError("#bookError"); angle = 0;
-  render(); window.scrollTo({ top: 0, behavior: "smooth" });
-});
 
 // ---------------------------------------------------------------------------
 // drawing a book page: art, shadow band and words exactly as in the PDF
@@ -714,16 +857,18 @@ function render() {
   if (!BOARD) return;
   const enabled = BOARD.pages.filter((p) => p.enabled);
   const pagesDone = enabled.every((p) => S.pages[p.id] && !isStale(p.id));
-  const anyBusy = busy.jack || busy.sheet || busy.pages.size > 0 || busy.book;
+  const anyBusy = anyBusyNow();
   const who = S.name.trim() || "them";
+  const photo = localPhoto || S.photo;
+  ["#newBook", "#shelfNew"].forEach((s) => ($(s).disabled = anyBusy));
 
   // 1
-  $("#photoPreview").hidden = !S.photo; if (S.photo) $("#photoPreview").src = S.photo;
-  $("#dropText").hidden = !!S.photo; $("#photoChange").hidden = !S.photo;
-  $("#saved").hidden = !S.photo && !S.name;
+  $("#photoPreview").hidden = !photo; if (photo && $("#photoPreview").getAttribute("src") !== photo) $("#photoPreview").src = photo;
+  $("#dropText").hidden = !!photo; $("#photoChange").hidden = !photo;
+  $("#photoChange").textContent = busy.photo ? "Uploading…" : "Change";
 
   // 2
-  $("#jackFrom").hidden = !S.photo; if (S.photo) $("#jackFrom").src = S.photo;
+  $("#jackFrom").hidden = !photo; if (photo && $("#jackFrom").getAttribute("src") !== photo) $("#jackFrom").src = photo;
   if (!busy.jack && !busy.sheet) drawJackFrame();
   else ["#anglePrev", "#angleNext", "#angleCaption"].forEach((s) => ($(s).hidden = true));
   $("#jackStart").hidden = !!S.jack;
@@ -807,13 +952,6 @@ function renderPageCard(spec, anyBusy) {
 
 function drawJackFrame() {
   const f = $("#jackFrame");
-  // A sheet made before the app cut it into views: cut it now (no OpenAI call).
-  if (S.sheet && S.sheet.viewsV !== VIEWS_V && !fetchingViews) {
-    fetchingViews = true;
-    api("/api/sheet/views", { sheet: S.sheet.image })
-      .then((d) => { if (S.sheet) { S.sheet.views = d.views; S.sheet.viewsV = VIEWS_V; commit(); } })
-      .catch(() => {}).finally(() => (fetchingViews = false));
-  }
   const list = views();
   if (angle >= list.length) angle = 0;
   f.innerHTML = "";
@@ -854,33 +992,198 @@ window.addEventListener("resize", () => render());
 // ---------------------------------------------------------------------------
 // shared
 // ---------------------------------------------------------------------------
-async function api(path, body, isForm = false) {
-  const res = await fetch(path, isForm ? { method: "POST", body } : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const json = (res.headers.get("content-type") || "").includes("application/json");
-  if (!res.ok) { const d = json ? await res.json().catch(() => null) : null; throw new Error(d?.error || `Something went wrong (${res.status}).`); }
-  return json ? res.json() : res.blob();
+// GET when there's no body; JSON or FormData POST otherwise. Picture routes
+// answer with a stream of progress lines; onProgress gets each one and the
+// call resolves with the finished result.
+async function api(path, body, { form = false, method, onProgress } = {}) {
+  const init = body === undefined ? { method: method || "GET" }
+    : form ? { method: "POST", body }
+    : { method: method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+  const res = await fetch(path, init);
+  if (res.status === 401) { location.href = "/"; throw new Error("Please sign in again."); }
+  const type = res.headers.get("content-type") || "";
+  if (!res.ok) { const d = type.includes("json") ? await res.json().catch(() => null) : null; throw new Error(d?.error || `Something went wrong (${res.status}).`); }
+  if (type.includes("ndjson")) return readProgress(res, onProgress);
+  return type.includes("json") ? res.json() : res.blob();
 }
 
-// Run one picture job with a progress overlay on `frame`.
-async function work(key, frame, label, expect, errorEl, fn) {
+async function readProgress(res, onProgress) {
+  const reader = res.body.getReader(), dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim(); buf = buf.slice(nl + 1);
+      if (!line) continue;
+      const msg = JSON.parse(line);
+      if (msg.stage === "done") return msg.result;
+      if (msg.stage === "error") throw new Error(msg.error);
+      if (msg.stage !== "ping") onProgress?.(msg);
+    }
+  }
+  // The connection dropped mid-picture. The server keeps going and saves it,
+  // so look for it instead of giving up.
+  setTimeout(() => openBook(BOOK_ID).catch(() => {}), 1500);
+  throw new Error("The connection dropped. The picture is still being finished; it will show up here by itself.");
+}
+
+// ---------------------------------------------------------------------------
+// progress: every picture gets a bar on its own frame, and the bar at the top
+// adds them up for the whole batch ("3 of 5 pictures done").
+//   queued    waiting for a free slot on the server
+//   drawing   the image call; the bar follows how long this kind of picture
+//             usually takes (the server's median of recent ones)
+//   checking  the automatic page check
+//   saving    stored to your account
+// ---------------------------------------------------------------------------
+const JOBS = new Map(); // key -> { label, stage, pct, t0, expectedMs, ahead, status }
+let batch = { total: 0, done: 0, failed: 0, names: new Map() };
+
+function estimate(job) {
+  const now = Date.now();
+  switch (job.stage) {
+    case "starting": return 1;
+    case "queued": return 3;
+    case "drawing": {
+      const x = (now - job.t0) / Math.max(job.expectedMs, 1000);
+      // Linear to 85% at the usual time, then creeps toward 92% if it's slow.
+      return x <= 1 ? 5 + 80 * x : 85 + 7 * (1 - Math.exp(-(x - 1) * 1.5));
+    }
+    case "checking": return 93;
+    case "saving": return 97;
+    default: return 100;
+  }
+}
+function jobText(job) {
+  if (job.stage === "starting") return "Starting…";
+  if (job.stage === "queued") return job.ahead > 1 ? `Waiting for a free slot (${job.ahead} ahead)` : "Waiting for a free slot";
+  if (job.stage === "drawing") {
+    const left = Math.round((job.t0 + job.expectedMs - Date.now()) / 1000);
+    return left > 2 ? `Drawing, about ${left} s left` : "Drawing, almost there…";
+  }
+  if (job.stage === "checking") return "Checking the page";
+  if (job.stage === "saving") return "Saving to your account";
+  return "Done";
+}
+
+function startJob(key, label, frame, { stage = "starting", t0 = Date.now(), expectedMs = 40000 } = {}) {
+  if (!JOBS.size) batch = { total: 0, done: 0, failed: 0, names: new Map() };
+  const overlay = document.createElement("div"); overlay.className = "working";
+  overlay.innerHTML = `<div class="what"></div><div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i></i></div><div class="pct"></div><small></small>`;
+  $(".what", overlay).textContent = `${label}…`;
+  frame.append(overlay);
+  const job = { key, label, stage, t0, expectedMs, ahead: 0, overlay, frame };
+  JOBS.set(key, job);
+  batch.total++; batch.names.set(key, { label, status: "running" });
+  paintJobs();
+  return job;
+}
+function progressJob(job, msg) {
+  if (msg.stage === "drawing") { job.t0 = Date.now(); job.expectedMs = msg.expectedMs || job.expectedMs; }
+  if (msg.stage === "queued") job.ahead = msg.ahead;
+  job.stage = msg.stage;
+  paintJobs();
+}
+function endJob(job, ok) {
+  job.overlay.remove();
+  JOBS.delete(job.key);
+  if (ok) batch.done++; else batch.failed++;
+  batch.names.get(job.key).status = ok ? "done" : "failed";
+  paintJobs();
+}
+
+function paintJobs() {
+  for (const job of JOBS.values()) {
+    if (!job.overlay.isConnected) job.frame.append(job.overlay); // the frame was redrawn
+    const pct = Math.min(99, Math.round(estimate(job)));
+    $("i", job.overlay).style.width = `${pct}%`;
+    $(".meter", job.overlay).setAttribute("aria-valuenow", pct);
+    $(".pct", job.overlay).textContent = `${pct}%`;
+    $("small", job.overlay).textContent = jobText(job);
+  }
+  const bar = $("#jobsBar");
+  if (!JOBS.size) { bar.hidden = true; return; }
+  const sum = [...JOBS.values()].reduce((n, j) => n + Math.min(99, estimate(j)), 0) + 100 * (batch.done + batch.failed);
+  const pct = Math.round(sum / batch.total);
+  bar.hidden = false;
+  $("#jobsTitle").textContent = `Making your book: ${batch.done} of ${batch.total} picture${batch.total > 1 ? "s" : ""} done${batch.failed ? `, ${batch.failed} failed` : ""}`;
+  $("#jobsPct").textContent = `${pct}%`;
+  $("#jobsMeter").style.width = `${pct}%`;
+  const ul = $("#jobsList"); ul.innerHTML = "";
+  for (const [key, { label, status }] of batch.names) {
+    const li = document.createElement("li"); li.className = status;
+    const j = JOBS.get(key);
+    li.innerHTML = "<b></b> <span></span>";
+    $("b", li).textContent = label;
+    $("span", li).textContent = status === "done" ? "✓" : status === "failed" ? "failed" : `${Math.min(99, Math.round(estimate(j)))}%`;
+    ul.append(li);
+  }
+}
+setInterval(() => JOBS.size && paintJobs(), 250);
+
+// Run one picture job with its own progress bar on `frame`.
+async function work(key, frame, label, errorEl, fn) {
   const err = typeof errorEl === "string" ? $(errorEl) : errorEl;
   const id = key.startsWith("page") ? Number(key.slice(4)) : null;
   if (id) busy.pages.add(id); else busy[key] = true;
   err.hidden = true; render();
-  const overlay = document.createElement("div"); overlay.className = "working";
-  overlay.innerHTML = `<div class="hop"></div><div class="what"></div><small></small>`;
-  $(".what", overlay).textContent = `${label}…`;
-  frame.append(overlay);
-  const t0 = Date.now();
-  const tick = () => ($("small", overlay).textContent = `${Math.round((Date.now() - t0) / 1000)} s, ${expect}`);
-  tick(); const timer = setInterval(tick, 1000);
-  try { await fn(); }
+  const job = startJob(key, label, frame);
+  let ok = false;
+  try { await fn((msg) => progressJob(job, msg)); ok = true; }
   catch (e) { err.textContent = e.message; err.hidden = false; }
   finally {
-    clearInterval(timer); overlay.remove();
+    endJob(job, ok);
     if (id) busy.pages.delete(id); else busy[key] = false;
     commit();
   }
+}
+
+// Pictures that were still drawing when this book was opened (the visitor
+// closed the tab, or opened it on another device): show their bars and wait.
+const RESUME_KEY = { reference: "jack", "reference-edit": "jack", sheet: "sheet", page: "page", "page-edit": "page" };
+const RESUME_LABEL = { reference: "Drawing Jack", "reference-edit": "Fixing Jack", sheet: "Drawing Jack from other angles", page: "Drawing page", "page-edit": "Fixing page" };
+function resumeJobs(running) {
+  const bookId = BOOK_ID;
+  const waiting = new Map();
+  for (const r of running) {
+    const key = RESUME_KEY[r.kind] === "page" ? `page${r.pageId}` : RESUME_KEY[r.kind];
+    if (JOBS.has(key)) continue;
+    const frame = key.startsWith("page") ? $(".bookpage", cardFor(r.pageId)) : $("#jackFrame");
+    if (!frame) continue;
+    const label = key.startsWith("page") ? `${RESUME_LABEL[r.kind]} ${r.pageId}` : RESUME_LABEL[r.kind];
+    if (key.startsWith("page")) busy.pages.add(r.pageId); else busy[key] = true;
+    waiting.set(r.id, { r, key, job: startJob(key, label, frame, { stage: "drawing", t0: new Date(r.startedAt).getTime(), expectedMs: r.expectedMs }) });
+  }
+  if (!waiting.size) return;
+  render();
+  const poll = async () => {
+    if (BOOK_ID !== bookId) { for (const w of waiting.values()) finish(w, false); return; }
+    try {
+      const { jobs } = await api(`/api/jobs?ids=${[...waiting.keys()].join(",")}`);
+      for (const j of jobs) {
+        const w = waiting.get(j.id);
+        if (!w || j.status === "running") continue;
+        if (j.status === "done") apply[j.kind]({ image: j.image, ...j.meta }, j.pageId);
+        else showJobError(w.key, j.error || "Drawing this picture failed.");
+        finish(w, j.status === "done");
+      }
+    } catch { /* try again next time */ }
+    if (waiting.size) setTimeout(poll, 3000);
+  };
+  const finish = (w, ok) => {
+    waiting.delete(w.r.id);
+    endJob(w.job, ok);
+    if (w.key.startsWith("page")) busy.pages.delete(w.r.pageId); else busy[w.key] = false;
+    commit();
+  };
+  setTimeout(poll, 1500);
+}
+function showJobError(key, msg) {
+  const el = key.startsWith("page") ? $(".error", cardFor(Number(key.slice(4)))) : $("#jackError");
+  el.textContent = msg; el.hidden = false;
 }
 
 function showError(sel, msg) { const e = $(sel); e.textContent = msg; e.hidden = false; }

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Beanstalk Me</title>
+<meta name="description" content="Turn one photo into a Jack and the Beanstalk picture book starring your child." />
+<style>
+  @font-face { font-family: "Fredoka"; font-weight: 400; font-display: swap; src: url(/fonts/fredoka-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Fredoka"; font-weight: 600; font-display: swap; src: url(/fonts/fredoka-latin-600-normal.woff2) format("woff2"); }
+  :root { --sky: #e8f2f6; --ink: #1b2a21; --ink-2: #4c5e54; --leaf: #2e7a3b; --leaf-2: #23602d; --paper: #fffdf8; --warn: #b4442f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--sky); color: var(--ink); font: 400 17px/1.5 "Fredoka", ui-rounded, system-ui, sans-serif; display: grid; place-items: center; padding: 32px 16px; }
+  main { max-width: 640px; width: 100%; }
+  h1 { margin: 0; font-weight: 600; font-size: clamp(2.8rem, 9vw, 4.6rem); line-height: .95; letter-spacing: -0.02em; color: var(--leaf-2); }
+  .beans { display: flex; gap: 10px; margin: 22px 0; }
+  .beans i { width: 30px; height: 20px; border-radius: 50%; transform: rotate(-16deg); display: block; box-shadow: inset -4px -3px 0 rgba(0,0,0,.16), inset 3px 2px 0 rgba(255,255,255,.28); }
+  p { margin: 0 0 14px; font-size: 1.15rem; color: var(--ink-2); max-width: 32em; }
+  ol { margin: 0 0 28px; padding-left: 1.2em; color: var(--ink-2); }
+  ol li { margin: 4px 0; }
+  .google {
+    display: inline-flex; align-items: center; gap: 12px; padding: 12px 22px 12px 14px; border-radius: 999px;
+    background: var(--paper); color: var(--ink); text-decoration: none; font-weight: 600; font-size: 1.05rem;
+    box-shadow: inset 0 0 0 2px #c9d9e2, 0 8px 20px -14px rgba(27,42,33,.6);
+  }
+  .google:hover { box-shadow: inset 0 0 0 2px var(--leaf), 0 8px 20px -14px rgba(27,42,33,.6); }
+  .google:focus-visible { outline: 3px solid #e3a52a; outline-offset: 3px; }
+  .google svg { width: 22px; height: 22px; }
+  .note { margin-top: 18px; font-size: .95rem; }
+  .err { color: var(--warn); font-weight: 600; }
+  .dev { margin-left: 12px; font-size: .9rem; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Beanstalk Me</h1>
+  <div class="beans" aria-hidden="true">
+    <i style="background:#d9584a"></i><i style="background:#e3a52a"></i><i style="background:#5fae4e"></i><i style="background:#4d8fd8"></i><i style="background:#9b6ad6"></i>
+  </div>
+  <p>Turn one photo into a <em>Jack and the Beanstalk</em> picture book starring your child.</p>
+  <ol>
+    <li>Upload a photo and type their name.</li>
+    <li>Check that Jack looks like them.</li>
+    <li>Watch the pages get drawn, fix anything that's off, then download the PDF.</li>
+  </ol>
+  <p class="err" id="err" hidden></p>
+  <a class="google" href="/auth/google">
+    <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+    Sign in with Google
+  </a>
+  <a class="dev" id="dev" href="/auth/dev" hidden>Test sign-in (local only)</a>
+  <p class="note">Your books are saved to your account, so you can close the tab and come back to them later, on any device. We only use your name, email and profile picture.</p>
+</main>
+<script>
+  const q = new URLSearchParams(location.search).get("signin");
+  if (q) { const e = document.getElementById("err"); e.hidden = false; e.textContent = q === "failed" ? "Signing in didn't work. Please try again." : "Sign-in was cancelled."; }
+  fetch("/api/storyboard").then((r) => r.json()).then((b) => { if (b.devLogin) document.getElementById("dev").hidden = false; }).catch(() => {});
+</script>
+</body>
+</html>
