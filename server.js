@@ -39,6 +39,7 @@ app.use(express.json({ limit: "2mb" }));
 
 // Signed out: the welcome page. Signed in: the app.
 app.get("/", (req, res) => res.sendFile(path.resolve(req.user ? "public/index.html" : "public/welcome.html")));
+app.get("/privacy", (_req, res) => res.sendFile(path.resolve("public/privacy.html")));
 app.use(express.static("public", { index: false }));
 
 // The book font, served to the browser so the page previews match the PDF.
