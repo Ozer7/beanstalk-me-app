@@ -39,6 +39,8 @@ app.use(express.json({ limit: "2mb" }));
 
 // Signed out: the welcome page. Signed in: the app.
 app.get("/", (req, res) => res.sendFile(path.resolve(req.user ? "public/index.html" : "public/welcome.html")));
+// The book the survey respondents (and the AI personas) review. Public, no login.
+app.get(["/survey", "/survey/"], (_req, res) => res.sendFile(path.resolve("public/survey/index.html")));
 app.get("/privacy", (_req, res) => res.sendFile(path.resolve("public/privacy.html")));
 app.use(express.static("public", { index: false }));
 
