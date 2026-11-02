@@ -18,6 +18,7 @@ import { layoutWords, PAGE_W } from "./lib/layout.js";
 import { log, httpLog } from "./lib/log.js";
 import * as db from "./lib/db.js";
 import { setupAuth, requireUser, DEV_LOGIN } from "./lib/auth.js";
+import { runAiFeedback } from "./lib/personas.js";
 
 // Secrets come ONLY from the environment (Render → Environment, or .env locally).
 const PORT = process.env.PORT || 3000;
@@ -122,6 +123,30 @@ app.delete("/api/books/:id", route(async (req) => {
   if (!ok) throw httpError(404, "That book isn't yours or doesn't exist.");
   log.info({ event: "book.delete", user: req.user.id, book: Number(req.params.id) }, "book deleted");
   return { ok: true };
+}));
+
+// AI feedback on a finished book: 10 different AI reviewers answer the same
+// survey as the real people (lib/personas.js). About a minute; ~10 vision calls.
+app.post("/api/books/:id/ai-feedback", route(async (req) => {
+  const book = await requireBook(req, req.params.id);
+  const st = book.state || {};
+  if (!st.photo) throw httpError(400, "This book has no photo.");
+  const dataUrl = (buf) => `data:image/jpeg;base64,${buf.toString("base64")}`;
+  const pages = [];
+  for (const spec of enabledPages()) {
+    if (!st.pages?.[spec.id]) throw httpError(400, `Page ${spec.id} isn't made yet.`);
+    pages.push({ label: `Page ${spec.id}`, words: spec.text, image: dataUrl(await loadImage(req, st.pages[spec.id].image, `page ${spec.id}`)) });
+  }
+  const input = { photo: dataUrl(await loadImage(req, st.photo, "photo")), pages };
+  log.info({ event: "ai-feedback.start", user: req.user.id, book: book.id }, "AI feedback started");
+  const result = await runAiFeedback(input, (p) => log.info({ event: "ai-feedback.progress", book: book.id, ...p }, "AI reviewer answered"));
+  const saved = await db.saveAiFeedback(req.user.id, book.id, result);
+  log.info({ event: "ai-feedback.done", user: req.user.id, book: book.id, ms: result.ms, diversity: result.diversity }, "AI feedback done");
+  return { id: saved.id, createdAt: saved.created_at, result };
+}));
+app.get("/api/books/:id/ai-feedback", route(async (req) => {
+  const book = await requireBook(req, req.params.id);
+  return { feedback: await db.latestAiFeedback(req.user.id, book.id) };
 }));
 
 // Jobs a returning visitor is waiting on (ids from the book's `running` list).
