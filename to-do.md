@@ -1,37 +1,49 @@
 # To do
 
-What still needs work in this build (pages 1–3 + About Me).
+## This homework: proof of concept → real app (due Wed Nov 4)
 
-## What my test books showed, and where it stands
-- **Page 2 had the wrong number of beans** (six in my first book, four in my second, while the words say "Five magic beans"). The beans were tiny. Now the prompt asks for five big beans in a row with gaps between them, and an automatic check counts them after the page is drawn and offers a one-click fix. In a side-by-side test both models then drew exactly five. Image models still miscount sometimes, so the check matters.
-- **Page 3: Jack's face drifted** when he was small, turned away and in the dark. Now he stands large in the doorway facing the reader, and every page also gets a **character sheet** (Jack from four angles and with four expressions) as a second reference. In testing his face, glasses and beard held on page 3.
-- **Expressions came out odd** ("tempted" became a sly side-eye). Each page now spells out the expression (eyebrows, eyes, mouth) and the prompt says expressions may not change his face.
-- **Page 3: the beans fell in a straight line down the wall.** The prompt now asks for a loose spray out over the garden. Sunburst follows this; Flare still tends to keep them near the wall.
-- **Only tested with my own photo, an adult.** The book is for kids, so it needs a few different kids' photos.
+- [x] **Sign in with Google**, using my own OAuth client in Google Cloud; app published so any Gmail can sign in
+- [x] **Books persist in a database** (Neon Postgres): users, books, every picture, image-call log, sessions
+- [x] **Live on Render** at https://app.bluebid.online. The earlier homeworks are untouched (own repo / branch / service)
+- [x] **Logging**: structured JSON logs in Render, plus `generation_log` in the database
+- [x] **Progress bar per picture** + one for the whole book, streamed from the server
+- [x] **Pages drawn in parallel** on the server (3 at a time)
+- [x] **Cheap test mode**: `IMAGE_QUALITY=low`, `MOCK_IMAGES=1`
+- [ ] **10 real responses** (CloudResearch Connect, survey built in Engage)
+- [ ] **10 AI responses** from 10 different personas
+- [ ] **Compare** the two sets (public link)
+- [ ] **Use the feedback** before shipping the final version (see below once it's in)
 
-## Model
-- **Switched to `gpt-image-2.5-sunburst` at high quality** after testing it against `gpt-image-2.5-flare` with the same Jack. Sunburst held the face better and followed the scene more closely. Same price per picture, but slower: about 36 seconds per page instead of 23. A whole book (Jack, sheet, three pages) now takes about 2–3 minutes and costs about 25–30¢.
-- **The automatic check uses `gpt-5.4-mini`** and can be wrong too. In testing it called plain grass "not plain", so the "is the words' area clear" question now comes from measuring the pixels instead. A real head or object under the words still gets flagged.
+## What the feedback says (fill in after the responses come in)
+- _Real people:_
+- _AI personas:_
+- _What people caught that the AI didn't, and the reverse:_
+- _What I'm changing because of it:_
 
-## OpenAI's safety filter
-- **It sometimes blocks a finished picture by mistake.** In my third test, page 3 (the same prompt that had worked three times) was stopped at the output stage. The app now explains that and shows a "Draw again" button, which usually works. OpenAI's looser `moderation: "low"` setting only exists for new images, not for edits like ours, so I can't turn it down.
+## Done since the last build
+- ~~The book is saved only in this browser~~: now saved to your Google account, on any device.
+- ~~No spending limit~~: 60 image calls per account per 24 hours (`DAILY_IMAGE_LIMIT`), and you must sign in.
+- ~~Three big requests at once could run Render out of memory~~: the server caps it at `IMAGE_CONCURRENCY`; the rest wait in line, and their bars say so.
 
-## Faces and characters
-- **Only Jack has reference images.** The mother, Milky-White and the old man are kept the same by fixed text descriptions. They matched in my tests, but nothing guarantees it. Next step: a cast sheet like Jack's.
-- **The character sheet adds one more picture per book** (about 30 seconds and 5¢). Worth it for likeness, but it's the slowest part before the pages start.
+## Still open
 
-## Words on the page
-- **The quiet area for the words isn't guaranteed.** The prompt asks for it and the app warns when something is there, but it doesn't move the words.
-- **The "something is under the words" check is tuned on three books.** Clear sky and grass scored at most 0.017 and strongly grained floorboards 0.034; heads and walls 0.045+. The cutoff is 0.04, which doesn't leave much room either way.
-- **The story always says "Jack" and "his."** It doesn't use the child's own name or pronouns.
-- **About Me only prints English letters.** A Hebrew name is refused instead of printed. Needs the Hebrew font and right-to-left layout.
+### App
+- **Free Render server sleeps** when idle and takes about a minute to wake up. The first visit is slow.
+- **Progress while drawing is an estimate.** The image API doesn't report percent done. The bar follows the median time of recent pictures of the same kind, then the real stages (checking, saving) are exact.
+- **Neon free tier is 0.5 GB.** At ~400 KB a picture, that's roughly 1,000 pictures. Old books could move to object storage (S3/R2) later.
+- **No way to delete the whole account** from the app yet (books can be deleted one by one). The privacy page says to email me.
+- **Stripe (99¢ for the 20-page book)**: not yet, per the assignment.
 
-## Not built yet
-- **Page 4, the beanstalk at dawn.** It's in the storyboard as an edit of page 3 but switched off, and its words aren't written. Pages 5–20 aren't in the storyboard yet, including the planting and climbing scenes from the last homework.
+### Pictures
+- **Image models still miscount sometimes** (the five beans). The automatic check catches it and offers a one-click fix.
+- **OpenAI's safety filter sometimes blocks a finished picture by mistake.** The app explains it and offers "Draw again".
+- **Only Jack has reference images.** The mother, Milky-White and the old man stay consistent through fixed text descriptions only. Next: a cast sheet.
 
-## App
-- **The book is saved only in this browser.** A refresh keeps it now, but it can't move to another device, and clearing site data deletes it.
-- **No spending limit.** Anyone with the link can make books on my OpenAI key. Needs a per-visitor limit or a daily cap.
-- **Three pages are drawn at once.** That's much faster, but it's three big requests at the same time on Render's free instance, which could run out of memory with bigger pictures.
-- **Slow first visit.** The free Render server sleeps when idle and takes about a minute to wake up.
-- **Print quality.** The art is 1024×1536 on a 6×9 in page (about 170 dpi). Fine on screen, soft if printed.
+### Words on the page
+- **The quiet area for the words isn't guaranteed.** The app warns when something is under the words but doesn't move them.
+- **The story always says "Jack" and "his"**, not the child's name or pronouns.
+- **About Me only prints English letters** (no Hebrew yet).
+
+### Not built yet
+- **Pages 4–20.** Page 4 is in the storyboard (an edit of page 3) but switched off.
+- **Print quality**: 1024×1536 on a 6×9 in page is about 170 dpi. Fine on screen, soft in print.

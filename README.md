@@ -1,10 +1,23 @@
 # Beanstalk Me
 
-A *Jack and the Beanstalk* picture book starring the child in an uploaded photo. This build makes the first three pages and the About Me page, and exports them as one PDF.
+A *Jack and the Beanstalk* picture book starring the child in an uploaded photo: from proof of concept to a real app. Sign in with Google, and every book you make is saved to your account. Close the tab, come back on another device, and it's still there.
 
-Live: https://storybook.bluebid.online (also https://beanstalk-storybook.onrender.com)
+Live: https://app.bluebid.online (also https://beanstalk-me-app.onrender.com)
 
-The previous homework, the two-scene version (planting the seeds, climbing the beanstalk), is on the [`two-scenes`](https://github.com/Ozer7/beanstalk-me/tree/two-scenes) branch and still runs at https://beanstalk.bluebid.online.
+Earlier homeworks are frozen and still running, each from its own repo or branch:
+- Storybook, pages 1–3 + About Me: https://storybook.bluebid.online, from [Ozer7/beanstalk-me](https://github.com/Ozer7/beanstalk-me) `main`
+- Two scenes: https://beanstalk.bluebid.online, from [Ozer7/beanstalk-me](https://github.com/Ozer7/beanstalk-me/tree/two-scenes) `two-scenes`
+
+## What's new in this build
+
+- **Sign in with Google.** Passport + `passport-google-oauth20`, with my own OAuth client. Sessions are stored in Postgres, so a login survives restarts and redeploys. Signed-out visitors only see the welcome page; every API route and every picture needs a login.
+- **Books saved to the database (Neon Postgres).** Tables: `users`, `books` (the book's state as JSON), `images` (every picture: photo, Jack, sheet, views, pages, and every fix, so undo still works), `generation_log` (one row per image call) and `session`. Pictures are served at `/img/<id>`, and only to their owner. **My books** lists them; **New book** starts another without losing the old one; each can be deleted.
+- **A closed tab doesn't lose a picture.** The server finishes and saves it anyway. When the book is opened again, pictures still drawing show their progress bars and pop in when done.
+- **Progress per picture.** Each picture route streams its progress as lines of JSON (`queued` → `drawing` → `checking` → `saving` → `done`). Every page card has its own bar with a time estimate, and a bar at the top adds them up ("Making your book: 2 of 3 pictures done"). The estimate is the median time of the last 20 pictures of that kind in `generation_log`, so it gets more accurate the more the app is used.
+- **Parallel.** The three pages are requested at once and drawn in parallel on the server, at most `IMAGE_CONCURRENCY` (default 3) at a time; the rest show "Waiting for a free slot".
+- **Logging.** One JSON line per event (pino) in Render's Logs: every request with a request id and user id, sign-ins, each image call (kind, page, model, quality, how long, success or the safety-filter message) and each PDF. Image calls also go into `generation_log`. Cookies, secrets and pictures are never logged.
+- **Spending limit.** At most `DAILY_IMAGE_LIMIT` (default 60) image calls per account per 24 hours.
+- **Cheap testing.** `IMAGE_QUALITY=low REFERENCE_QUALITY=low` for low-res pictures; `MOCK_IMAGES=1` for placeholders with no API calls (`MOCK_DELAY_MS=5000` to watch the bars).
 
 ## How it works
 
@@ -14,7 +27,7 @@ The previous homework, the two-scene version (planting the seeds, climbing the b
 4. **About me.** The name and whatever the uploader types in, with a live preview of the page.
 5. **Read it, then download.** A full-screen reader shows the book exactly as the PDF lays it out, then the PDF downloads.
 
-The book is saved in the browser (IndexedDB), so a refresh doesn't lose it.
+The book is saved to your account as you go: every picture the moment it's drawn, and your typing half a second after you stop.
 
 ## Keeping the child the same on every page
 
@@ -54,7 +67,11 @@ The page cards in the app preview the words the same way, and flag a page when a
 | `lib/layout.js` | Where the words go on each page: size, line breaks, the box they cover. Used by both the PDF and the check below. |
 | `lib/look.js` | Measures the picture under the words (brightness, whether something is in the way). |
 | `lib/pdf.js` | Builds the PDF. |
-| `server.js` | Express routes. |
+| `server.js` | Express routes: books, pictures (streamed progress, concurrency limit), PDF. |
+| `lib/auth.js` | Google sign-in, sessions in Postgres. |
+| `lib/db.js` | Tables and queries. |
+| `lib/log.js` | Structured logging. |
+| `public/welcome.html` | The signed-out page. |
 | `public/index.html` | The app. |
 | `PROMPTS.md` | The exact prompts, for pasting into the OpenAI Playground. Regenerate with `npm run prompts`. |
 | `to-do.md` | What still needs work. |
@@ -63,16 +80,20 @@ The page cards in the app preview the words the same way, and flag a page when a
 
 ```bash
 npm install
-cp .env.example .env     # put your OpenAI key in .env; git ignores it
+cp .env.example .env     # fill in; git ignores .env
 npm run dev              # http://localhost:3000
 ```
 
-No key, or don't want to spend credit? `npm run mock` uses placeholder pictures and makes no API calls. `npm test` runs the whole pipeline in mock mode and writes a sample PDF.
+You need a Postgres database (`DATABASE_URL`); tables are created on startup. Without Google credentials locally, set `DEV_LOGIN=1` to get a test sign-in link (it's ignored in production). `MOCK_IMAGES=1` makes placeholder pictures and no API calls; `npm test` runs the picture-and-PDF pipeline in mock mode.
 
 ## Deploy (Render)
 
-Web service, build `npm install`, start `npm start`. In **Environment**, set `OPENAI_API_KEY`. Optional: `IMAGE_MODEL` (default `gpt-image-2.5-sunburst`; `gpt-image-2.5-flare` is faster), `IMAGE_QUALITY` (pages, default `high`), `REFERENCE_QUALITY` (Jack and his sheet, default `high`), `CHECK_MODEL` (the page check, default `gpt-5.4-mini`).
+Web service from this repo, build `npm install`, start `node server.js`, health check `/healthz`. Environment: `OPENAI_API_KEY`, `DATABASE_URL` (Neon), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `NODE_ENV=production`. Optional ones are listed in `.env.example`.
 
-## The API key
+Google Cloud → Google Auth Platform → Clients: the authorised redirect URIs are `https://app.bluebid.online/auth/google/callback`, `https://beanstalk-me-app.onrender.com/auth/google/callback` and `http://localhost:3000/auth/google/callback`. The app is published (not "Testing"), so any Gmail can sign in.
 
-The key is only ever read from the environment (`OPENAI_API_KEY`). `.env` is in `.gitignore`, and the repo history has been checked: no key was ever committed.
+DNS: `app.bluebid.online` is a CNAME to `beanstalk-me-app.onrender.com` at GoDaddy, with the custom domain added in Render.
+
+## Secrets
+
+`.env` is in `.gitignore`; on Render the keys live only in the Environment tab. Nothing secret is in the repo or its history.
