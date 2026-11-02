@@ -54,3 +54,11 @@ assert.deepEqual(unsupportedChars("Zoë O’Brien-Núñez"), []);
 assert.ok(unsupportedChars("שלום").length > 0);
 console.log("✓ About Me font check");
 console.log("All good.");
+
+// 5. The painted style replaces the 3D one everywhere, still exactly once.
+const { STYLES } = await import("../lib/storyboard.js");
+for (const p of [referencePrompt({ style: "painted" }), pagePrompt(1, { style: "painted" })]) {
+  assert.equal(count(p, STYLES.painted.text), 1, "painted style line once");
+  assert.equal(count(p, STYLE), 0, "no 3D style line in a painted book");
+}
+console.log("✓ Painted style");

@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import { createRequire } from "node:module";
 import path from "node:path";
-import { STYLE, IMAGE_SIZE, SHEET_SIZE, PAGES, getPage, enabledPages } from "./lib/storyboard.js";
+import { STYLE, STYLES, DEFAULT_STYLE, IMAGE_SIZE, SHEET_SIZE, PAGES, getPage, enabledPages } from "./lib/storyboard.js";
 import {
   referencePrompt, referenceEditPrompt, sheetPrompt, pagePrompt, pageEditPrompt, cleanInstruction,
 } from "./lib/prompts.js";
@@ -42,6 +42,17 @@ app.use(express.json({ limit: "2mb" }));
 app.get("/", (req, res) => res.sendFile(path.resolve(req.user ? "public/index.html" : "public/welcome.html")));
 // The book the survey respondents (and the AI personas) review. Public, no login.
 app.get(["/survey", "/survey/"], (_req, res) => res.sendFile(path.resolve("public/survey/index.html")));
+// The feedback comparison (public, for the hand-in): the page, the 10 real
+// responses (repo file) and the latest AI run (database).
+app.get(["/feedback", "/feedback/"], (_req, res) => res.sendFile(path.resolve("public/feedback/index.html")));
+app.get("/feedback/human.json", (_req, res) => res.sendFile(path.resolve("feedback/human-responses.json")));
+app.get("/feedback/ai.json", async (_req, res) => {
+  try {
+    const row = await db.latestSurveyFeedback();
+    if (!row) return res.status(404).json({ error: "The AI run hasn't finished yet." });
+    res.json({ createdAt: row.created_at, ...row.result });
+  } catch (err) { sendError(res, err); }
+});
 app.get("/privacy", (_req, res) => res.sendFile(path.resolve("public/privacy.html")));
 app.use(express.static("public", { index: false }));
 
@@ -64,6 +75,8 @@ app.get("/healthz", (_req, res) => res.send("ok"));
 app.get("/api/storyboard", (_req, res) => {
   res.json({
     style: STYLE,
+    styles: Object.fromEntries(Object.entries(STYLES).map(([k, v]) => [k, v.label])),
+    defaultStyle: DEFAULT_STYLE,
     size: IMAGE_SIZE,
     model: MODEL,
     models: MODELS,
@@ -202,9 +215,9 @@ app.post("/api/photo", upload.single("photo"), route(async (req) => {
 }));
 
 // Photo -> Jack. This picture is the reference for every page of the book.
-app.post("/api/reference", imageRoute("reference", async (req) => {
+app.post("/api/reference", imageRoute("reference", async (req, book) => {
   const photo = await loadImage(req, req.body.photo, "photo");
-  const prompt = referencePrompt();
+  const prompt = referencePrompt({ style: bookStyle(book) });
   return {
     quality: REFERENCE_QUALITY,
     draw: (model) => editImage({ images: [photo], prompt, model, quality: REFERENCE_QUALITY, mock: "reference" }),
@@ -213,11 +226,11 @@ app.post("/api/reference", imageRoute("reference", async (req) => {
 }));
 
 // Fix one thing on the reference (image 1 = reference, image 2 = the photo).
-app.post("/api/reference/edit", imageRoute("reference-edit", async (req) => {
+app.post("/api/reference/edit", imageRoute("reference-edit", async (req, book) => {
   const reference = await loadImage(req, req.body.reference, "reference");
   const photo = req.body.photo ? await loadImage(req, req.body.photo, "photo") : null;
   const instruction = requireInstruction(req.body.instruction);
-  const prompt = referenceEditPrompt(instruction);
+  const prompt = referenceEditPrompt(instruction, { style: bookStyle(book) });
   return {
     quality: REFERENCE_QUALITY,
     saveAs: "reference",
@@ -231,7 +244,7 @@ app.post("/api/reference/edit", imageRoute("reference-edit", async (req) => {
 app.post("/api/sheet", imageRoute("sheet", async (req, book) => {
   const reference = await loadImage(req, req.body.reference, "reference");
   const photo = req.body.photo ? await loadImage(req, req.body.photo, "photo") : null;
-  const prompt = sheetPrompt();
+  const prompt = sheetPrompt({ style: bookStyle(book) });
   return {
     quality: REFERENCE_QUALITY,
     draw: (model) => editImage({ images: photo ? [reference, photo] : [reference], prompt, model, quality: REFERENCE_QUALITY, size: SHEET_SIZE, mock: "sheet" }),
@@ -245,12 +258,12 @@ app.post("/api/sheet", imageRoute("sheet", async (req, book) => {
 // One page, from the same references every time: image 1 = Jack, image 2 =
 // his character sheet (a page with `editOf` starts from that earlier page).
 // Then the page check.
-app.post("/api/page", imageRoute("page", async (req) => {
+app.post("/api/page", imageRoute("page", async (req, book) => {
   const spec = requirePage(req.body.pageId);
   const quality = pickQuality(req.body.quality, PAGE_QUALITY);
   const images = await references(req);
   if (spec.editOf) images.unshift(await loadImage(req, req.body.source, `page ${spec.editOf}`));
-  const prompt = pagePrompt(spec, { sheet: images.length > (spec.editOf ? 2 : 1) });
+  const prompt = pagePrompt(spec, { sheet: images.length > (spec.editOf ? 2 : 1), style: bookStyle(book) });
   return {
     pageId: spec.id,
     quality,
@@ -262,13 +275,13 @@ app.post("/api/page", imageRoute("page", async (req) => {
 
 // Fix one thing on a page: same picture, one change
 // (image 1 = page, image 2 = Jack, image 3 = his character sheet). Then check it.
-app.post("/api/page/edit", imageRoute("page-edit", async (req) => {
+app.post("/api/page/edit", imageRoute("page-edit", async (req, book) => {
   const spec = requirePage(req.body.pageId);
   const quality = pickQuality(req.body.quality, PAGE_QUALITY);
   const pageImage = await loadImage(req, req.body.image, `page ${spec.id}`);
   const refs = await references(req);
   const instruction = requireInstruction(req.body.instruction);
-  const prompt = pageEditPrompt(spec, instruction, { sheet: refs.length > 1 });
+  const prompt = pageEditPrompt(spec, instruction, { sheet: refs.length > 1, style: bookStyle(book) });
   return {
     pageId: spec.id,
     quality,
@@ -463,6 +476,12 @@ async function bookPayload(userId, book) {
 // ---------------------------------------------------------------------------
 // helpers
 // ---------------------------------------------------------------------------
+// The style this book is drawn in (chosen before Jack; storyboard STYLES).
+function bookStyle(book) {
+  const key = book?.state?.style;
+  return STYLES[key] ? key : DEFAULT_STYLE;
+}
+
 function wordsPreview(spec) {
   const { size, lines, box } = layoutWords(spec);
   return { size: size / PAGE_W, lines: lines.map((l) => l.text), box };

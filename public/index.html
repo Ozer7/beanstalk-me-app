@@ -145,6 +145,9 @@
   }
   .field input:focus, .field textarea:focus { box-shadow: inset 0 0 0 2px var(--leaf); outline: none; }
   .field small { color: var(--ink-2); font-weight: 400; }
+  .styles { border: 0; margin: 16px 0 0; padding: 0; display: grid; gap: 6px; }
+  .styles legend { font-weight: 500; padding: 0; margin-bottom: 6px; }
+  .chip[aria-pressed="true"] { background: var(--leaf); color: #fff; box-shadow: none; }
   .tips { margin: 14px 0 0; padding-left: 1.1em; color: var(--ink-2); }
   @media (max-width: 620px) { .star { grid-template-columns: 1fr; } .drop { width: 170px; } }
 
@@ -319,6 +322,11 @@
           <label class="field">Child's name
             <input id="name" maxlength="40" autocomplete="off" placeholder="e.g. Maya" />
           </label>
+          <fieldset class="styles" id="styles">
+            <legend>Picture style</legend>
+            <div class="chips" id="styleChips"></div>
+            <small class="muted" id="styleNote"></small>
+          </fieldset>
           <ul class="tips">
             <li>Face clearly visible, looking at the camera</li>
             <li>Good light, no sunglasses or hats</li>
@@ -484,7 +492,7 @@ const FIX_EXAMPLES = {
 // the server (pictures are stored there too and referenced as /img/<id>).
 // ---------------------------------------------------------------------------
 const blank = () => ({
-  v: 3, name: "", photo: null,
+  v: 3, name: "", photo: null, style: "animated",
   jack: null, jackHistory: [], jackApproved: false, jackVersion: 0,
   sheet: null, pages: {}, about: { age: "", food: "", likes: "", growUp: "", more: "" },
 });
@@ -540,6 +548,7 @@ function commit() { store.save(); render(); }
   $("#whoPic").innerHTML = u.picture ? `<img alt="" referrerpolicy="no-referrer">` : `<span class="initial"></span>`;
   if (u.picture) $("#whoPic img").src = u.picture; else $("#whoPic .initial").textContent = (u.name || u.email || "?")[0].toUpperCase();
   buildPages();
+  buildStyles();
   await openBook(new URLSearchParams(location.search).get("book") || "current");
 })();
 
@@ -641,6 +650,24 @@ async function setPhoto(file) {
     localPhoto = null;
     showError("#jackError", e.message);
   } finally { busy.photo = false; commit(); }
+}
+
+// Picture style, chosen before Jack is drawn (every picture in a book uses one).
+function buildStyles() {
+  const wrap = $("#styleChips"); wrap.innerHTML = "";
+  for (const [key, label] of Object.entries(BOARD.styles || {})) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.dataset.style = key; b.textContent = label;
+    b.addEventListener("click", () => setStyle(key));
+    wrap.append(b);
+  }
+}
+function setStyle(key) {
+  if (key === S.style || anyBusyNow()) return;
+  const hadJack = !!S.jack;
+  S.style = key;
+  if (hadJack) { Object.assign(S, { jack: null, jackHistory: [], jackApproved: false, sheet: null }); S.jackVersion++; angle = 0; }
+  commit();
 }
 
 $("#name").addEventListener("input", (e) => { S.name = e.target.value.trimStart(); $("#aboutName").value = S.name; commit(); });
@@ -866,6 +893,9 @@ function render() {
   $("#photoPreview").hidden = !photo; if (photo && $("#photoPreview").getAttribute("src") !== photo) $("#photoPreview").src = photo;
   $("#dropText").hidden = !!photo; $("#photoChange").hidden = !photo;
   $("#photoChange").textContent = busy.photo ? "Uploading…" : "Change";
+
+  document.querySelectorAll("#styleChips .chip").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.style === (S.style || "animated"))); b.disabled = anyBusy; });
+  $("#styleNote").textContent = S.jack ? "Changing the style draws Jack again." : "Every picture in the book uses this style.";
 
   // 2
   $("#jackFrom").hidden = !photo; if (photo && $("#jackFrom").getAttribute("src") !== photo) $("#jackFrom").src = photo;

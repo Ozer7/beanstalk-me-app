@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>People vs AI Feedback</title>
+<meta name="description" content="Beanstalk Me: 10 real people and 10 AI reviewers rate the same picture book, side by side." />
+<style>
+  :root {
+    --bg: #e8f2f6; --card: #fffdf8; --ink: #1b2a21; --ink-2: #4c5e54; --line: #d6e7ef;
+    --human: #2e7a3b; --ai: #6a4fc4; --human-bg: #e3f1e5; --ai-bg: #ece7fa; --warn: #b4442f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0f1713; --card: #18221c; --ink: #e6efe9; --ink-2: #a7b8ad; --line: #2a372f; --human: #6cc17a; --ai: #a98ff0; --human-bg: #1d2e21; --ai-bg: #241f36; --warn: #f08a74; }
+  }
+  :root[data-theme="dark"] { --bg: #0f1713; --card: #18221c; --ink: #e6efe9; --ink-2: #a7b8ad; --line: #2a372f; --human: #6cc17a; --ai: #a98ff0; --human-bg: #1d2e21; --ai-bg: #241f36; --warn: #f08a74; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { margin: 0 0 6px; font-size: clamp(1.8rem, 5vw, 2.6rem); line-height: 1.1; }
+  h2 { margin: 40px 0 12px; font-size: 1.35rem; }
+  h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  p { margin: 0 0 10px; color: var(--ink-2); max-width: 46em; }
+  a { color: var(--human); }
+  .lede { font-size: 1.08rem; }
+  .who { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+  .who.h { background: var(--human-bg); color: var(--human); }
+  .who.a { background: var(--ai-bg); color: var(--ai); }
+  .grid { display: grid; gap: 14px; }
+  .scores { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .score-row { display: grid; grid-template-columns: 70px 1fr 42px; gap: 8px; align-items: center; margin: 8px 0 0; font-size: .92rem; }
+  .bar { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: inherit; }
+  .num { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+  .dist { display: flex; gap: 3px; margin-top: 10px; align-items: flex-end; height: 46px; }
+  .dist span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; font-size: .7rem; color: var(--ink-2); text-align: center; }
+  .dist b { display: block; border-radius: 3px 3px 0 0; }
+  .two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  ul.points { margin: 6px 0 0; padding-left: 1.1em; }
+  ul.points li { margin: 6px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  th, td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); }
+  td.n { font-variant-numeric: tabular-nums; text-align: center; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  .muted { color: var(--ink-2); }
+  .quote { font-style: italic; }
+  .pill { font-size: .8rem; color: var(--ink-2); }
+  .err { color: var(--warn); font-weight: 600; }
+  @media (max-width: 640px) {
+    table.resp thead { display: none; }
+    table.resp tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+    table.resp td { display: block; border: 0; padding: 3px 0; }
+    table.resp td.n { text-align: left; }
+    table.resp td[data-l]::before { content: attr(data-l) ": "; font-weight: 600; color: var(--ink-2); }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Real people vs AI reviewers</h1>
+  <p class="lede">The same picture book (<a href="/survey">see it here</a>) and the same five questions, answered by <span class="who h">10 real people</span> on CloudResearch Connect and by <span class="who a">10 AI reviewers</span>, each a different persona. MCON 368, Beanstalk Me, Nov 2026.</p>
+  <p id="loadErr" class="err" hidden></p>
+
+  <h2>Scores side by side</h2>
+  <div class="grid scores" id="scores"></div>
+  <div class="card" style="margin-top:14px" id="pay"></div>
+
+  <h2>What each side caught</h2>
+  <div class="grid two" id="caught">
+    <div class="card"><h3>People caught, the AI didn't</h3><ul class="points" id="humanOnly"></ul></div>
+    <div class="card"><h3>The AI caught, people didn't</h3><ul class="points" id="aiOnly"></ul></div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3>Both noticed</h3><ul class="points" id="both"></ul></div>
+  <div class="card" style="margin-top:14px"><h3>How they differed overall</h3><div id="overall"></div></div>
+
+  <h2>How the 10 AI reviewers were made different</h2>
+  <div class="card" id="method">
+    <ul class="points">
+      <li><b>A persona grid, not a list of names.</b> Each reviewer differs on several things at once: who they are to the child (parent, grandparent, teacher, stranger), what they know (illustrator, print shop, librarian, IT, nothing special), age, and how much they care.</li>
+      <li><b>A lens.</b> Each is told the one thing they notice first: the face, the words, the print quality, the price, faithfulness to the tale, whether it's giftable. That spreads the critiques across the whole book instead of all landing on the same flaw.</li>
+      <li><b>A temperament and a survey style.</b> Some are generous, some hard to please, and one is a tired crowd worker who answers in a few words, like real survey takers.</li>
+      <li><b>Independent calls.</b> No reviewer sees another's answer, and each looks at the pages in a different order.</li>
+      <li><b>A measured check.</b> Every answer is turned into an embedding. Any answer too similar to an earlier one (cosine similarity above 0.92) is redone once with a different lens. The similarity numbers are below, so "different" is measured, not hoped for.</li>
+    </ul>
+    <p id="diversity" class="muted" style="margin-top:10px"></p>
+  </div>
+
+  <h2>The 10 real responses</h2>
+  <p>Paid participants on CloudResearch Connect; all passed the attention check ("what animal does Jack trade?" → a cow). "What isn't good" includes the AI interviewer's follow-up answers.</p>
+  <div class="scroll"><table class="resp" id="humanTable"></table></div>
+
+  <h2>The 10 AI responses</h2>
+  <p id="aiNote">Each reviewer saw the same photo and the same 4 pages as the people did.</p>
+  <div class="scroll"><table class="resp" id="aiTable"></table></div>
+
+  <p class="pill" style="margin-top:28px">Data: <a href="/feedback/human.json">human.json</a> · <a href="/feedback/ai.json">ai.json</a> · Code: <a href="https://github.com/Ozer7/beanstalk-me-app">github.com/Ozer7/beanstalk-me-app</a> (<code>lib/personas.js</code>)</p>
+</main>
+<script src="/feedback/comparison.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const mean = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+
+// The written comparison (filled in from both data sets).
+const COMPARISON = window.COMPARISON || null;
+
+(async () => {
+  let human, ai;
+  try {
+    human = await fetch("/feedback/human.json").then((r) => r.json());
+    const r = await fetch("/feedback/ai.json");
+    ai = r.ok ? await r.json() : null;
+  } catch (e) { $("#loadErr").hidden = false; $("#loadErr").textContent = "Couldn't load the data. Reload the page."; return; }
+  const H = human.responses;
+  const A = ai ? ai.answers.map((x) => ({ name: x.persona.name, who: x.persona.who, lens: x.newLens || x.persona.lens, redone: x.redone, ...x.answer })) : [];
+
+  const qs = [["likeness", "Looks like the person"], ["story", "Story rings true"], ["professional", "Looks professional"]];
+  $("#scores").innerHTML = qs.map(([k, label]) => {
+    const h = H.map((r) => r[k]), a = A.map((r) => r[k].score);
+    const row = (cls, name, arr) => arr.length ? `<div class="score-row"><span class="who ${cls}">${name}</span><div class="bar"><i style="width:${mean(arr) / 5 * 100}%;background:var(--${cls === "h" ? "human" : "ai"})"></i></div><span class="num">${mean(arr).toFixed(1)}</span></div>` : `<div class="score-row"><span class="who ${cls}">${name}</span><span class="muted">not run yet</span><span></span></div>`;
+    return `<div class="card"><h3>${label}</h3>${row("h", "People", h)}${row("a", "AI", a)}
+      <div class="dist" title="How many gave each score (green: people, purple: AI)">${[1,2,3,4,5].map((v)=>{const nh=h.filter(x=>x===v).length, na=a.filter(x=>x===v).length;return `<span><b style="height:${nh*4}px;background:var(--human)"></b><b style="height:${na*4}px;background:var(--ai)"></b>${v}</span>`}).join("")}</div>
+      <p class="pill" style="margin:6px 0 0">Bars: how many gave each score, 1–5.</p></div>`;
+  }).join("");
+
+  const pay = (arr) => ({ yes: arr.filter((x) => x === "yes").length, maybe: arr.filter((x) => x === "maybe").length, no: arr.filter((x) => x === "no").length });
+  const ph = pay(H.map((r) => r.pay)), pa = pay(A.map((r) => r.pay));
+  $("#pay").innerHTML = `<h3>Would pay 99¢ for the 20-page version</h3>
+    <p style="margin:6px 0 0"><span class="who h">People</span> ${ph.yes} yes · ${ph.maybe} maybe · ${ph.no} no</p>
+    <p style="margin:6px 0 0"><span class="who a">AI</span> ${A.length ? `${pa.yes} yes · ${pa.maybe} maybe · ${pa.no} no` : "not run yet"}</p>`;
+
+  const c = COMPARISON;
+  const fill = (sel, items) => { $(sel).innerHTML = (items || ["Written once both sets are in."]).map((t) => `<li>${t}</li>`).join(""); };
+  fill("#humanOnly", c?.humanOnly); fill("#aiOnly", c?.aiOnly); fill("#both", c?.both);
+  $("#overall").innerHTML = (c?.overall || ["Written once both sets are in."]).map((t) => `<p>${t}</p>`).join("");
+
+  if (ai) {
+    const d = ai.diversity;
+    $("#diversity").textContent = `This run: mean pairwise similarity ${d.meanSimilarity} (lowest ${d.minSimilarity}, highest ${d.maxSimilarity}); ${d.redone} answer${d.redone === 1 ? " was" : "s were"} redone for being too close to another. Model: ${ai.model}; embeddings: ${ai.embedModel}.`;
+  } else $("#diversity").textContent = "The AI run hasn't finished yet.";
+
+  $("#humanTable").innerHTML = `<thead><tr><th>#</th><th>Like</th><th>Story</th><th>Pro</th><th>99¢</th><th>Why (likeness / story / quality)</th><th>What isn't good</th></tr></thead><tbody>${
+    H.map((r, i) => `<tr><td class="n">${i + 1}</td><td class="n" data-l="Likeness">${r.likeness}</td><td class="n" data-l="Story">${r.story}</td><td class="n" data-l="Professional">${r.professional}</td><td class="n" data-l="99¢">${r.pay}</td>
+      <td data-l="Why"><span class="quote">${esc(r.likenessWhy)}</span><br><span class="quote">${esc(r.storyWhy)}</span><br><span class="quote">${esc(r.qualityWhy)}</span></td><td data-l="What isn't good">${esc(r.notGood)}</td></tr>`).join("")}</tbody>`;
+
+  $("#aiTable").innerHTML = A.length ? `<thead><tr><th>Reviewer</th><th>Like</th><th>Story</th><th>Pro</th><th>99¢</th><th>Why (likeness / story / quality)</th><th>What isn't good</th></tr></thead><tbody>${
+    A.map((r) => `<tr><td data-l="Reviewer"><b>${esc(r.name)}</b><br><span class="muted">${esc(r.who)}</span><br><span class="pill">Looks first at: ${esc(r.lens)}${r.redone ? " (redone)" : ""}</span></td>
+      <td class="n" data-l="Likeness">${r.likeness.score}</td><td class="n" data-l="Story">${r.story.score}</td><td class="n" data-l="Professional">${r.professional.score}</td><td class="n" data-l="99¢">${r.pay}</td>
+      <td data-l="Why"><span class="quote">${esc(r.likeness.why)}</span><br><span class="quote">${esc(r.story.why)}</span><br><span class="quote">${esc(r.professional.why)}</span></td><td data-l="What isn't good">${esc(r.notGood)}</td></tr>`).join("")}</tbody>`
+    : `<tbody><tr><td class="muted">The AI run hasn't finished yet. Reload in a minute.</td></tr></tbody>`;
+})();
+</script>
+</body>
+</html>
