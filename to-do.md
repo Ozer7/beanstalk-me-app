@@ -9,16 +9,29 @@
 - [x] **Progress bar per picture** + one for the whole book, streamed from the server
 - [x] **Pages drawn in parallel** on the server (3 at a time)
 - [x] **Cheap test mode**: `IMAGE_QUALITY=low`, `MOCK_IMAGES=1`
-- [ ] **10 real responses** (CloudResearch Connect, survey built in Engage)
-- [ ] **10 AI responses** from 10 different personas
-- [ ] **Compare** the two sets (public link)
-- [ ] **Use the feedback** before shipping the final version (see below once it's in)
+- [x] **10 real responses**: CloudResearch Connect, survey built in Engage, all 10 passed the attention check → [feedback/human-responses.json](feedback/human-responses.json)
+- [x] **10 AI responses** from 10 different personas (`lib/personas.js`)
+- [x] **Compare** the two sets → https://beanstalk-me-app.onrender.com/feedback
+- [x] **Use the feedback**: painted style, hands check, page 3 mother (below)
 
-## What the feedback says (fill in after the responses come in)
-- _Real people:_
-- _AI personas:_
-- _What people caught that the AI didn't, and the reverse:_
-- _What I'm changing because of it:_
+## What the feedback says
+Real people (10, 1–5): **likeness 3.8, story 3.7, professional 3.5**; 99¢ for 20 pages: 4 yes, 3 maybe, 3 no. Full side-by-side with the AI reviewers: https://beanstalk-me-app.onrender.com/feedback
+
+- **Likeness works because of the glasses and beard.** Eight people gave it a 4. Two said the head is drawn wider/shorter than in the photo.
+- **The art style is the main complaint.** 5 of 10 called it generic, "Disney-like", glossy, cartoony or "obviously AI"; 2 asked for hand-drawn or painted.
+- **The story feels cut short**: three people said it's rushed and skips scenes (expected: this is 3 of 20 pages).
+- **Single sharp catches:** a six-fingered hand on the old man; blurry, "not HD" backgrounds; the mother looks too happy on page 3; the About Me page would make more sense first.
+- **The AI interviewer pushed too hard** on one person who had no complaints ("please stop asking this question"). Next survey: cap follow-ups at 2.
+- **People took ~10 minutes, not 5**, so they earned about $4.60/hr. Next study: estimate 10 minutes and pay for it.
+
+### What I changed because of it
+- [x] **New "Painted storybook" style** (gouache/watercolour, matte, visible brushwork), chosen per book next to the name. The 3D style stays the default.
+- [x] **The page check now looks at hands** (four fingers and a thumb) and offers a one-click fix.
+- [x] **Page 3: the mother is cross, not smiling**, spelled out in the prompt.
+- [x] **Head shape**: every prompt now asks for the same head width and length as the photo, "not wider or rounder".
+- [ ] **Sharper backgrounds**: the survey book was made at the old default; the live app is set to `low` for testing. Hand-in: set quality back to `high`, and print at a higher resolution later.
+- [ ] **About Me first?** One person asked; keep it last for now, but add one line on page 1 ("starring Ori").
+- [ ] **Longer story**: pages 4–20.
 
 ## Done since the last build
 - ~~The book is saved only in this browser~~: now saved to your Google account, on any device.

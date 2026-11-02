@@ -321,7 +321,13 @@ app.use((err, _req, res, _next) => sendError(res, err));
 // The survey book's AI feedback runs once by itself (when it has never run on
 // this database), so it doesn't need a browser to start it.
 if (!MOCK && process.env.OPENAI_API_KEY && process.env.AUTO_SURVEY_FEEDBACK !== "0") {
-  db.latestSurveyFeedback().then((row) => row || surveyFeedback("startup")).catch((err) => log.error({ err }, "AI feedback failed"));
+  db.latestSurveyFeedback()
+    .then(async (row) => {
+      const result = row ? row.result : await surveyFeedback("startup");
+      // One log line per reviewer, so the answers can be read in Render's logs.
+      result.answers.forEach((a, i) => log.info({ event: "ai-feedback.answer", n: i + 1, persona: a.persona.name, redone: a.redone, answer: a.answer }, "AI reviewer answer"));
+    })
+    .catch((err) => log.error({ err }, "AI feedback failed"));
 }
 
 app.listen(PORT, () =>

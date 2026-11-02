@@ -8,6 +8,13 @@ Earlier homeworks are frozen and still running, each from its own repo or branch
 - Storybook, pages 1–3 + About Me: https://storybook.bluebid.online, from [Ozer7/beanstalk-me](https://github.com/Ozer7/beanstalk-me) `main`
 - Two scenes: https://beanstalk.bluebid.online, from [Ozer7/beanstalk-me](https://github.com/Ozer7/beanstalk-me/tree/two-scenes) `two-scenes`
 
+## Feedback
+
+- **Survey** (Engage, sent to 10 paid people on CloudResearch Connect): https://beanstalk-me-app.onrender.com/survey is the book they saw.
+- **10 real vs 10 AI responses, compared**: https://beanstalk-me-app.onrender.com/feedback
+- **How the 10 AI reviewers differ** (`lib/personas.js`): a persona grid (relation to the child, expertise, age, how much they care), a "lens" (what each looks at first), a temperament and survey style (one rushed crowd worker), independent calls with a different page order each, and a measured check: answers are embedded, and any answer with cosine similarity above 0.92 to an earlier one is redone with a new lens.
+- **What changed because of it**: a painted storybook style, a hands check, and an angry mother on page 3 (see to-do.md).
+
 ## What's new in this build
 
 - **Sign in with Google.** Passport + `passport-google-oauth20`, with my own OAuth client. Sessions are stored in Postgres, so a login survives restarts and redeploys. Signed-out visitors only see the welcome page; every API route and every picture needs a login.
@@ -71,6 +78,9 @@ The page cards in the app preview the words the same way, and flag a page when a
 | `lib/auth.js` | Google sign-in, sessions in Postgres. |
 | `lib/db.js` | Tables and queries. |
 | `lib/log.js` | Structured logging. |
+| `lib/personas.js` | The 10 AI reviewers and the diversity check. |
+| `feedback/human-responses.json` | The 10 real responses. |
+| `public/feedback/` | The public comparison page. |
 | `public/welcome.html` | The signed-out page. |
 | `public/index.html` | The app. |
 | `PROMPTS.md` | The exact prompts, for pasting into the OpenAI Playground. Regenerate with `npm run prompts`. |
