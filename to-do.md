@@ -24,6 +24,8 @@ Real people (10, 1–5): **likeness 3.8, story 3.7, professional 3.5**; 99¢ for
 - **The AI interviewer pushed too hard** on one person who had no complaints ("please stop asking this question"). Next survey: cap follow-ups at 2.
 - **People took ~10 minutes, not 5**, so they earned about $4.60/hr. Next study: estimate 10 minutes and pay for it.
 
+What the **AI reviewers** added (10 personas; likeness 3.9, story 3.8, professional 3.6; 99¢: 1 yes, 9 maybe, 0 no): all 10 brought up the About Me page, and 7 flagged that "Age 22 / learning Computer Science" doesn't fit a children's book. Also: an adult face on a child's body looks uncanny, sentences are long for five-year-olds, page 2 is too cheerful for a grim trade. They missed the extra finger and the blurry backgrounds that people caught, and they hedged (all scores 3–4, almost all "maybe").
+
 ### What I changed because of it
 - [x] **New "Painted storybook" style** (gouache/watercolour, matte, visible brushwork), chosen per book next to the name. The 3D style stays the default.
 - [x] **The page check now looks at hands** (four fingers and a thumb) and offers a one-click fix.
@@ -32,6 +34,9 @@ Real people (10, 1–5): **likeness 3.8, story 3.7, professional 3.5**; 99¢ for
 - [ ] **Sharper backgrounds**: the survey book was made at the old default; the live app is set to `low` for testing. Hand-in: set quality back to `high`, and print at a higher resolution later.
 - [ ] **About Me first?** One person asked; keep it last for now, but add one line on page 1 ("starring Ori").
 - [ ] **Longer story**: pages 4–20.
+- [ ] **About Me for adults** (AI): when the star is an adult, label it "starring as Jack" without the child-style fields, or let the uploader hide Age.
+- [ ] **Reading level** (AI): keep each page's words short enough for a 5-year-old reading along.
+- [ ] **Next survey**: estimate 10 minutes and pay for it; cap Engage follow-ups at 2; hide About Me details from most AI personas so they don't all pile on one flaw.
 
 ## Done since the last build
 - ~~The book is saved only in this browser~~: now saved to your Google account, on any device.

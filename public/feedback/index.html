@@ -33,9 +33,10 @@
   .bar { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
   .bar i { display: block; height: 100%; border-radius: inherit; }
   .num { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
-  .dist { display: flex; gap: 3px; margin-top: 10px; align-items: flex-end; height: 46px; }
-  .dist span { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; font-size: .7rem; color: var(--ink-2); text-align: center; }
-  .dist b { display: block; border-radius: 3px 3px 0 0; }
+  .dist { display: flex; gap: 6px; margin-top: 14px; }
+  .dist span { flex: 1; display: grid; grid-template-rows: 54px auto; font-size: .72rem; color: var(--ink-2); text-align: center; }
+  .dist .pair { display: flex; gap: 2px; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line); }
+  .dist b { display: block; width: 40%; border-radius: 3px 3px 0 0; }
   .two { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
   ul.points { margin: 6px 0 0; padding-left: 1.1em; }
   ul.points li { margin: 6px 0; }
@@ -121,8 +122,8 @@ const COMPARISON = window.COMPARISON || null;
     const h = H.map((r) => r[k]), a = A.map((r) => r[k].score);
     const row = (cls, name, arr) => arr.length ? `<div class="score-row"><span class="who ${cls}">${name}</span><div class="bar"><i style="width:${mean(arr) / 5 * 100}%;background:var(--${cls === "h" ? "human" : "ai"})"></i></div><span class="num">${mean(arr).toFixed(1)}</span></div>` : `<div class="score-row"><span class="who ${cls}">${name}</span><span class="muted">not run yet</span><span></span></div>`;
     return `<div class="card"><h3>${label}</h3>${row("h", "People", h)}${row("a", "AI", a)}
-      <div class="dist" title="How many gave each score (green: people, purple: AI)">${[1,2,3,4,5].map((v)=>{const nh=h.filter(x=>x===v).length, na=a.filter(x=>x===v).length;return `<span><b style="height:${nh*4}px;background:var(--human)"></b><b style="height:${na*4}px;background:var(--ai)"></b>${v}</span>`}).join("")}</div>
-      <p class="pill" style="margin:6px 0 0">Bars: how many gave each score, 1–5.</p></div>`;
+      <div class="dist" title="How many gave each score (green: people, purple: AI)">${[1,2,3,4,5].map((v)=>{const nh=h.filter(x=>x===v).length, na=a.filter(x=>x===v).length;return `<span><span class="pair"><b style="height:${nh*5}px;background:var(--human)" title="People: ${nh}"></b><b style="height:${na*5}px;background:var(--ai)" title="AI: ${na}"></b></span>${v}</span>`}).join("")}</div>
+      <p class="pill" style="margin:6px 0 0">How many gave each score, 1–5 (green: people, purple: AI).</p></div>`;
   }).join("");
 
   const pay = (arr) => ({ yes: arr.filter((x) => x === "yes").length, maybe: arr.filter((x) => x === "maybe").length, no: arr.filter((x) => x === "no").length });

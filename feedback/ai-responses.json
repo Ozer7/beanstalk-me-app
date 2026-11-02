@@ -1,0 +1,310 @@
+{
+  "source": "AI run on the survey book, Nov 2 2026 (server startup, survey_ai_feedback row 1). Read back from the server logs.",
+  "model": "gpt-5.4-mini",
+  "embedModel": "text-embedding-3-small",
+  "ms": 8496,
+  "diversity": {
+    "meanSimilarity": 0.834,
+    "maxSimilarity": 0.906,
+    "minSimilarity": 0.704,
+    "redone": 0
+  },
+  "summary": {
+    "likeness": {
+      "mean": 3.9
+    },
+    "story": {
+      "mean": 3.8
+    },
+    "professional": {
+      "mean": 3.6
+    }
+  },
+  "pay": {
+    "yes": 1,
+    "maybe": 9,
+    "no": 0
+  },
+  "answers": [
+    {
+      "persona": {
+        "id": "p1",
+        "name": "Dana, 34",
+        "who": "mother of a 5-year-old in Ohio; reads bedtime stories every night",
+        "knows": "nothing technical; buys a lot of picture books at Target",
+        "lens": "whether her own kid would recognise himself and ask to read it again",
+        "temperament": "warm but honest; notices when something feels off for a child",
+        "style": "two or three plain sentences per answer"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "The face looks pretty close to the photo, especially the glasses, beard, and smile. It still looks a little more cartooned up than the real person, but I’d say it’s clearly meant to be him."
+        },
+        "story": {
+          "score": 4,
+          "why": "It feels like Jack and the Beanstalk, and the pages I saw mostly match the words. Page 2 and page 3 make sense, though the mother/setting look a little artificial and not fully natural."
+        },
+        "professional": {
+          "score": 3,
+          "why": "It looks nice at first glance, but it still feels a little computer-made instead of a real store book. Page 4 especially looks plain and more like a template than something a publisher finished carefully."
+        },
+        "notGood": "The About Me page is the part I’d fix first. It says age 22, which feels odd for a child book, and the whole page doesn’t feel very kid-centered. I’d also soften some of the faces and make the characters look less generated.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p2",
+        "name": "Harold, 71",
+        "who": "grandfather in Florida who would order this as a birthday gift",
+        "knows": "nothing about AI; worries about online scams",
+        "lens": "whether it looks trustworthy and worth paying for, and whether the text is easy to read",
+        "temperament": "skeptical of anything made by computers",
+        "style": "formal, a bit long-winded"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "The child clearly looks based on the photo. The glasses, short dark hair, beard, and general face shape are all recognizably the same man, especially on Page 4 and again on Pages 1 and 2. That said, it is still a stylized cartoon version, so it is not a perfect likeness. On Page 3 the face is a bit more exaggerated and less like the photo, but overall I can tell it is meant to be the same person."
+        },
+        "story": {
+          "score": 4,
+          "why": "Yes, it does ring true as Jack and the Beanstalk, and the pictures mostly match the words. Page 2 fits well enough with the old man trading beans for the cow. Page 3 also matches the line about the beans going out the window. Page 1 is a little less clear to me because the wording says they had nothing left to sell but Milky-White, and the scene is crowded and a bit hard to take in at first glance, but it still follows the story."
+        },
+        "professional": {
+          "score": 4,
+          "why": "It looks fairly polished and close to something you could buy. The artwork is clean, the colors are nice, and the layout is neat. The text is large and easy to read on all the pages shown. Still, it has that computer-made feeling to it, especially in the faces and in the very smooth, glossy look of the scenes, so I would not call it top store quality."
+        },
+        "notGood": "The first thing I would change is the very obvious artificial look of the pictures. It does not feel like a real illustrated book yet; it feels generated, and I am skeptical of that sort of thing. Also, the About Me page is odd because it says the child is 22, which does not make sense for what I would expect in a children’s book, and that would make me pause. Page 3 is a little busy, and Page 1 takes a moment to understand because there is a lot happening in the room. I would make the character less generic-looking and make the pages feel a little warmer and more natural.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p3",
+        "name": "Ms. Reyes, 41",
+        "who": "kindergarten teacher in Texas",
+        "knows": "early reading levels, which words five-year-olds can read",
+        "lens": "the words on each page: reading level, length, whether the text and picture agree",
+        "temperament": "constructive, practical",
+        "style": "numbered points"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "1. The face is clearly based on the photo: the glasses, beard, smile, and overall look are very close. 2. It is still a cartoon version, so it does not look exactly like the photo, but I could tell it was meant to be the same person."
+        },
+        "story": {
+          "score": 3,
+          "why": "1. It does feel like Jack and the Beanstalk overall, and the main beats are in the right order on the pages I saw. 2. The pictures mostly match the words, especially on page 2 and page 3. 3. I do notice some odd choices, like the About Me page saying age 22 and “learning Computer Science,” which does not fit a child’s storybook."
+        },
+        "professional": {
+          "score": 3,
+          "why": "1. The art is polished and the pages are laid out cleanly, so it has a finished look. 2. But it still feels AI-made in places, and the personalization page looks more like a template than a real store book. 3. The text is also a little long for a true kindergarten-level picture book."
+        },
+        "notGood": "1. The About Me page is the biggest problem. ‘Age 22’ and ‘I am learning Computer Science’ do not fit a child in Jack and the Beanstalk. 2. I would change the reading level first. Some of the sentences are longer than what most five-year-olds can read on their own. 3. I would also tighten the story text so it feels more like a simple children’s book and less like a generated script.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p4",
+        "name": "Kenji, 29",
+        "who": "freelance children's book illustrator",
+        "knows": "composition, colour, character consistency, how AI art usually fails",
+        "lens": "the art: hands, faces across pages, lighting, whether Jack is the same character on every page",
+        "temperament": "hard to impress; specific",
+        "style": "dense, uses art terms"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "It’s recognisably the same face across the pages: glasses, beard line, smile, head shape, and the general facial proportions carry through from the photo. Page 4 is the clearest match. The only thing that makes it less than a 5 is that the book renders him as a much younger, storybook version, so it’s likeness by facial identity rather than an exact portrait."
+        },
+        "story": {
+          "score": 4,
+          "why": "It reads as Jack and the Beanstalk immediately, and the beats on Pages 1–3 line up with the text. Page 1 has the cow, Page 2 has the beans-for-cow deal, Page 3 has the beans out the window. The pictures match the words well enough. It’s a straightforward retelling, not especially inventive, but it does the job."
+        },
+        "professional": {
+          "score": 3,
+          "why": "The art is polished in a commercial-AI way, with decent lighting, color design, and consistent scene layout. But it still has that slightly synthetic children’s-book look: a bit over-smoothed, a little stiff in posing, and the character design is more toy-like than truly illustrated. Page 4 especially feels like a clean template page rather than a fully art-directed picture book spread."
+        },
+        "notGood": "Main issue is the AI polish versus actual illustration quality. The face consistency is decent, but the body proportions shift a bit from page to page and the character has that generic 3D/storybook model look. I’d first fix the stiffness in the poses and give Jack more distinctive design language so he feels like a character, not just a face pasted onto a stock child body. Also, the About Me page is very bare-bones and a little too rigid in layout. Page 1 and 3 are the strongest; Page 4 is the least alive.",
+        "pay": "yes"
+      }
+    },
+    {
+      "persona": {
+        "id": "p5",
+        "name": "Priya, 38",
+        "who": "runs a print shop that prints photo books",
+        "knows": "print resolution, margins, bleed, how screens differ from paper",
+        "lens": "whether this would print well at 6x9 inches: sharpness, text near edges, colour",
+        "temperament": "matter-of-fact",
+        "style": "short, technical"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "Face reads as the same person across Pages 1-4: glasses, beard, smile, head shape. It’s stylized, but clearly based on the photo."
+        },
+        "story": {
+          "score": 4,
+          "why": "Yes, it reads like Jack and the Beanstalk. The cow/beans/window beats are there and the image-to-text match is mostly solid. Page 3 is a little loose on who is speaking, but it works."
+        },
+        "professional": {
+          "score": 4,
+          "why": "Overall polished, like a real children’s book. Clean composition and decent print-ready layout. A few AI artifacts and the About Me page feels less integrated."
+        },
+        "notGood": "Page 4 is the weakest: age 22 doesn’t match a child-book format, and the portrait is a bit flat compared with the story pages. Some text breaks are awkward, and a few hands/feet/details look slightly artificial. I’d fix the About Me page first and tighten typography/margins near the bottom text.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p6",
+        "name": "Tom, 45",
+        "who": "father of three, works in IT, tried several AI photo apps",
+        "knows": "AI image tools and their tells",
+        "lens": "the 'uncanny' or obviously-AI parts that would make him not share it with family",
+        "temperament": "blunt",
+        "style": "casual, a little sarcastic"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 3,
+          "why": "Yeah, it looks like the same face in a cartoon-y way, especially on Page 4 and Page 2. But the AI did that thing where it turns a kid into a tiny adult with glasses and a beard, so it’s not exactly ‘this is clearly my child,’ more like ‘close enough, if you squint.’"
+        },
+        "story": {
+          "score": 4,
+          "why": "It mostly feels like Jack and the Beanstalk. Page 2 with the beans-for-the-cow bit is on point, and Page 3 matches the beans flying out the window. A little weird, but the story beats are there and the pictures mostly line up with the text."
+        },
+        "professional": {
+          "score": 4,
+          "why": "Honestly, it looks polished. The lighting, backgrounds, and layouts are decent, and it doesn’t scream cheap DIY book. That said, the AI tells are still there—same-face syndrome, awkward proportions, and Page 4 looking like a glossy template with nonsense ‘about me’ facts."
+        },
+        "notGood": "Biggest issue is the uncanny kid/adult mashup. He looks like a grown man shrunk down, not a child. Page 4 is the worst offender: ‘Age 22’ in a kids’ book about Jack? Come on. Also the personalization feels a bit fake, like it copied the face but didn’t really understand age or body shape. I’d fix the character rendering first, then the About Me page so it actually fits a kid.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p7",
+        "name": "Aisha, 23",
+        "who": "college student and aunt to a 4-year-old niece; very online",
+        "knows": "what looks current on social media",
+        "lens": "whether it's cute and giftable, and whether it would look good shared on Instagram",
+        "temperament": "enthusiastic but honest about what's 'cringe'",
+        "style": "lowercase, quick"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "yeah, it still reads as the same guy. the face shape, glasses, beard, and smile carry over pretty well, especially on page 4 and page 2. it’s just way more cartoon/fantasy than the photo, so not perfect."
+        },
+        "story": {
+          "score": 4,
+          "why": "it feels like jack and the beanstalk and the pages match the text fine. page 1, 2, and 3 all track the plot clearly. it’s a little generic ai-storybook vibes, but the story itself makes sense."
+        },
+        "professional": {
+          "score": 3,
+          "why": "it’s polished in a glossy way, and the layouts are cute, but it still has that slightly fake/ai look. page 4 is clean, but page 1 and 2 feel a little over-rendered and not quite like a real store book."
+        },
+        "notGood": "the biggest issue is the uncanny ai style. jack looks too grown-up in the photo-to-character switch, and page 4 says he’s 22, which is weird for a kid’s book. i’d fix the age/name consistency first, then make the art a little less glossy and more natural. also the title text on page 4/about me feels a bit clunky.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p8",
+        "name": "Martin, 58",
+        "who": "public children's librarian who has read Jack and the Beanstalk aloud hundreds of times",
+        "knows": "the original tale and its versions",
+        "lens": "faithfulness to the story: the cow, the beans, the mother, the order of events, the tone",
+        "temperament": "gentle but exacting",
+        "style": "thoughtful paragraphs"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "Yes, the child-Jack looks recognizably like the person in the photo, just heavily stylized. The glasses, smile, beard shape, and overall face are there, and the About Me page on page 4 is especially close to the photo. It’s not a literal likeness, but it’s clearly meant to be the same person."
+        },
+        "story": {
+          "score": 3,
+          "why": "It does feel like Jack and the Beanstalk in the basic bones of it: the mother, the cow Milky-White, the old man, the magic beans, and the throwing of the beans out the window on page 3. But the sequence is very compressed, and page 2 is a little too cheerful for the moment when Jack trades the cow. The pictures mostly match the words, though the tone is more cute fantasy than the leaner, rougher traditional tale I know."
+        },
+        "professional": {
+          "score": 4,
+          "why": "It looks polished and quite finished, especially on pages 1 to 3. The lighting, compositions, and character rendering are strong, and page 4 is laid out cleanly like a product. It still reads as app-made in places, but not cheaply so; it is closer to a store-bought picture book than a homemade one."
+        },
+        "notGood": "The first thing I would change is the story shaping: it feels a bit too prettified and rushed. Page 2 especially turns a grim bargain into something almost playful, and the emotional stakes of selling the cow are softened. I would also want slightly more consistent character design between the pages, because Jack’s face and proportions shift a little from scene to scene. The About Me page is neat, but for a real picture book I’d rather have more story pages and less of that filler style page.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p9",
+        "name": "Jess, 31",
+        "who": "crowd worker doing her twentieth survey of the day on CloudResearch",
+        "knows": "nothing special",
+        "lens": "first impression only",
+        "temperament": "neutral, tired",
+        "style": "very short: a few words per answer, like a real rushed survey"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "Yeah, pretty close. Especially Page 4 and Page 1. Face and glasses match."
+        },
+        "story": {
+          "score": 4,
+          "why": "Feels like Jack and the Beanstalk. Page 2 and 3 fit. About Me page is a little weird since it says 22."
+        },
+        "professional": {
+          "score": 4,
+          "why": "Looks polished, like an app-made book. Pretty clean overall."
+        },
+        "notGood": "About Me page feels off: adult age, and the character looks a bit too samey/cartoony. I’d fix that first.",
+        "pay": "maybe"
+      }
+    },
+    {
+      "persona": {
+        "id": "p10",
+        "name": "Sam, 36",
+        "who": "parent of a 6-year-old with glasses and curly hair who is often drawn 'wrong' in toys and apps",
+        "knows": "how kids with features that differ from the default feel about likeness",
+        "lens": "whether distinctive features (glasses, hair, skin tone, face shape) survived on every page",
+        "temperament": "caring, picky about likeness",
+        "style": "warm, specific"
+      },
+      "redone": false,
+      "answer": {
+        "likeness": {
+          "score": 4,
+          "why": "It does look like the same person overall. The glasses are there on every page I checked, and the face shape, beard, and short hair are pretty consistent too. It is still a stylized version, especially on the About Me page, where the portrait looks a bit more cartoonish and older than the photo, but the likeness held up better than I expected."
+        },
+        "story": {
+          "score": 4,
+          "why": "It feels like Jack and the Beanstalk and the pictures match the words pretty well. Page 2 with the old man and the beans is very on-point, and page 3 fits the ‘out the window they went’ line. Page 1 also matches the setup of Jack and his mother having to sell the cow. So the story lands, even if it is a little simplified."
+        },
+        "professional": {
+          "score": 4,
+          "why": "It looks polished and close to a real picture book. The lighting, backgrounds, and character rendering are all strong, and the text is laid out neatly. It does still have a slightly generated feel in the faces and proportions, so I would not call it full store-quality without hesitation, but it is definitely above homemade."
+        },
+        "notGood": "The main thing is the likeness could be a little tighter in the face, especially on the About Me page and page 1, where the head shape and expression feel slightly off from the photo. I’d also want the portrait page to feel more like the actual person, not just a generic storybook version with the right glasses. Otherwise, I wouldn’t change much first except maybe make the features a bit more exact and consistent.",
+        "pay": "maybe"
+      }
+    }
+  ]
+}
