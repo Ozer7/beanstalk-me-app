@@ -17,6 +17,7 @@ Earlier homeworks are frozen and still running, each from its own repo or branch
 
 ## What's new in this build
 
+- **A password before sign-in.** Visitors first see a night-sky beanstalk screen asking for the magic word (`ACCESS_PASSWORD`, set only in Render, never in the repo). The right word grows the beanstalk up to the giant's castle and opens the sign-in page; it's remembered for 30 days. The survey book, the feedback comparison and the privacy page stay public. (`lib/gate.js`, `public/gate.html`)
 - **Sign in with Google.** Passport + `passport-google-oauth20`, with my own OAuth client. Sessions are stored in Postgres, so a login survives restarts and redeploys. Signed-out visitors only see the welcome page; every API route and every picture needs a login.
 - **Books saved to the database (Neon Postgres).** Tables: `users`, `books` (the book's state as JSON), `images` (every picture: photo, Jack, sheet, views, pages, and every fix, so undo still works), `generation_log` (one row per image call) and `session`. Pictures are served at `/img/<id>`, and only to their owner. **My books** lists them; **New book** starts another without losing the old one; each can be deleted.
 - **A closed tab doesn't lose a picture.** The server finishes and saves it anyway. When the book is opened again, pictures still drawing show their progress bars and pop in when done.
@@ -98,7 +99,7 @@ You need a Postgres database (`DATABASE_URL`); tables are created on startup. Wi
 
 ## Deploy (Render)
 
-Web service from this repo, build `npm install`, start `node server.js`, health check `/healthz`. Environment: `OPENAI_API_KEY`, `DATABASE_URL` (Neon), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `NODE_ENV=production`. Optional ones are listed in `.env.example`.
+Web service from this repo, build `npm install`, start `node server.js`, health check `/healthz`. Environment: `OPENAI_API_KEY`, `DATABASE_URL` (Neon), `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET`, `ACCESS_PASSWORD`, `NODE_ENV=production`. Optional ones are listed in `.env.example`.
 
 Google Cloud → Google Auth Platform → Clients: the authorised redirect URIs are `https://app.bluebid.online/auth/google/callback`, `https://beanstalk-me-app.onrender.com/auth/google/callback` and `http://localhost:3000/auth/google/callback`. The app is published (not "Testing"), so any Gmail can sign in.
 

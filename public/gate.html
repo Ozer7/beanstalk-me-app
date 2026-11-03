@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Beanstalk Me</title>
+<meta name="robots" content="noindex" />
+<style>
+  @font-face { font-family: "Fredoka"; font-weight: 400; font-display: swap; src: url(/fonts/fredoka-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Fredoka"; font-weight: 600; font-display: swap; src: url(/fonts/fredoka-latin-600-normal.woff2) format("woff2"); }
+  :root {
+    --night: #1d2350; --dusk: #4a3f7a; --dawn: #f2b48a; --gold: #f3c65b;
+    --leaf: #2e7a3b; --leaf-2: #23602d; --leaf-3: #5fae4e; --paper: #fffdf8; --ink: #1b2a21; --ink-2: #4c5e54; --warn: #b4442f;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; min-height: 100vh; overflow-x: hidden; color: var(--ink);
+    font: 400 17px/1.5 "Fredoka", ui-rounded, system-ui, sans-serif;
+    background: linear-gradient(180deg, var(--night) 0%, var(--dusk) 48%, var(--dawn) 100%);
+    background-color: var(--night);
+  }
+
+  /* ---------- the scene ---------- */
+  .scene { position: fixed; inset: 0; pointer-events: none; }
+  .stars i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff; opacity: .8; animation: twinkle 3s ease-in-out infinite; }
+  @keyframes twinkle { 50% { opacity: .2; } }
+  .cloud { position: absolute; fill: #fff; opacity: .9; }
+  .cloud.c1 { top: 7%; left: -40px; width: 300px; animation: drift 60s linear infinite; }
+  .cloud.c2 { top: 16%; right: -60px; width: 240px; opacity: .7; animation: drift 80s linear infinite reverse; }
+  @keyframes drift { to { transform: translateX(60px); } }
+  .castle { position: absolute; top: 2%; left: 50%; width: min(240px, 46vw); transform: translateX(-50%); }
+  .stalk { position: absolute; bottom: 0; left: 50%; height: 92%; width: 220px; transform: translateX(-50%); overflow: visible; }
+  .stalk .vine { fill: none; stroke: var(--leaf); stroke-width: 14; stroke-linecap: round; stroke-dasharray: 1300; stroke-dashoffset: 1040; transition: stroke-dashoffset 1.6s cubic-bezier(.3,.7,.2,1); }
+  .stalk .vine.hi { stroke: var(--leaf-3); stroke-width: 4; opacity: .7; }
+  .stalk .leaf { fill: var(--leaf-3); transform-box: fill-box; transform-origin: 0% 50%; transform: scale(0); transition: transform .5s cubic-bezier(.3,1.6,.5,1); }
+  body.grow .stalk .vine { stroke-dashoffset: 0; }
+  body.grow .stalk .leaf { transform: scale(1); }
+  .ground { position: absolute; bottom: 0; left: 0; right: 0; height: 70px; background: radial-gradient(120% 100% at 50% 100%, #3d6b33 0 60%, transparent 61%); }
+
+  /* ---------- the card ---------- */
+  main { position: relative; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px 110px; }
+  .card {
+    width: min(420px, 100%); background: rgba(255,253,248,.97); border-radius: 26px; padding: 30px 28px 26px;
+    box-shadow: 0 30px 60px -24px rgba(13,10,40,.75), inset 0 0 0 1px rgba(255,255,255,.6); text-align: center;
+    margin-top: min(18vh, 150px);
+  }
+  .beans { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+  .beans i { width: 22px; height: 15px; border-radius: 50%; transform: rotate(-16deg); display: block; box-shadow: inset -3px -2px 0 rgba(0,0,0,.16), inset 2px 2px 0 rgba(255,255,255,.3); }
+  h1 { margin: 0; font-weight: 600; font-size: clamp(2rem, 8vw, 2.6rem); line-height: 1; color: var(--leaf-2); letter-spacing: -.01em; }
+  .rhyme { margin: 12px 0 2px; font-style: italic; color: var(--ink-2); }
+  .sub { margin: 0 0 20px; color: var(--ink-2); font-size: .95rem; }
+  form { display: grid; gap: 12px; }
+  label { text-align: left; font-weight: 600; font-size: .95rem; }
+  .field { position: relative; }
+  .field input {
+    width: 100%; padding: 14px 52px 14px 18px; border-radius: 16px; border: 0; background: #fff; font: inherit; color: var(--ink);
+    box-shadow: inset 0 0 0 2px #cfe0d2; letter-spacing: .04em;
+  }
+  .field input:focus { outline: none; box-shadow: inset 0 0 0 3px var(--leaf); }
+  .show { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: 0; background: none; padding: 8px; cursor: pointer; color: var(--ink-2); border-radius: 10px; }
+  .show:focus-visible { outline: 3px solid var(--gold); }
+  button.go {
+    border: 0; border-radius: 999px; padding: 14px 20px; font: 600 1.05rem "Fredoka", system-ui, sans-serif; cursor: pointer;
+    background: var(--leaf); color: #fff; display: inline-flex; justify-content: center; align-items: center; gap: 10px;
+    box-shadow: 0 8px 18px -10px rgba(35,96,45,.9);
+  }
+  button.go:hover { background: var(--leaf-2); }
+  button.go:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+  button.go:disabled { opacity: .6; cursor: progress; }
+  .bean-icon { width: 18px; height: 12px; border-radius: 50%; background: var(--gold); transform: rotate(-16deg); box-shadow: inset -2px -2px 0 rgba(0,0,0,.18); }
+  .msg { min-height: 1.5em; margin: 2px 0 0; font-weight: 600; color: var(--warn); }
+  .msg.ok { color: var(--leaf-2); }
+  .card.shake { animation: shake .45s; }
+  @keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+  .foot { margin-top: 18px; font-size: .85rem; color: var(--ink-2); }
+  .foot a { color: var(--leaf-2); }
+  @media (prefers-reduced-motion: reduce) {
+    .stars i, .cloud { animation: none; }
+    .stalk .vine, .stalk .leaf { transition: none; }
+    .card.shake { animation: none; }
+  }
+  @media (max-height: 640px) { .castle { display: none; } .card { margin-top: 0; } }
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true">
+  <div class="stars" id="stars"></div>
+  <svg class="cloud c1" viewBox="0 0 300 90"><path d="M30 80h230a35 35 0 0 0-10-68 50 50 0 0 0-92-6 40 40 0 0 0-70 18A32 32 0 0 0 30 80z"/></svg>
+  <svg class="cloud c2" viewBox="0 0 300 90"><path d="M30 80h230a35 35 0 0 0-10-68 50 50 0 0 0-92-6 40 40 0 0 0-70 18A32 32 0 0 0 30 80z"/></svg>
+  <!-- the giant's castle on its cloud, door shut -->
+  <svg class="castle" viewBox="0 0 240 150">
+    <path d="M10 140h220a26 26 0 0 0-8-50 38 38 0 0 0-70-6 30 30 0 0 0-54 12A26 26 0 0 0 10 140z" fill="#fff" opacity=".95"/>
+    <g fill="#8f86b8">
+      <rect x="62" y="40" width="116" height="66" rx="4"/>
+      <rect x="44" y="22" width="34" height="84" rx="3"/><rect x="162" y="22" width="34" height="84" rx="3"/>
+      <path d="M44 22h8v-8h6v8h8v-8h6v8h6v-6H44z"/><path d="M162 22h8v-8h6v8h8v-8h6v8h6v-6h-34z"/>
+      <path d="M62 40h10v-8h8v8h10v-8h8v8h10v-8h8v8h10v-8h8v8h10v-8h8v8h12v-6H62z"/>
+    </g>
+    <path d="M104 106v-28a16 16 0 0 1 32 0v28z" fill="#5b4a2e"/><circle cx="130" cy="92" r="2.4" fill="var(--gold)"/>
+    <rect x="54" y="44" width="10" height="16" rx="5" fill="var(--gold)" opacity=".85"/><rect x="176" y="44" width="10" height="16" rx="5" fill="var(--gold)" opacity=".85"/>
+  </svg>
+  <!-- the beanstalk: mostly hidden until the magic word -->
+  <svg class="stalk" viewBox="0 0 220 1000" preserveAspectRatio="xMidYMax meet">
+    <path class="vine" d="M110 1000 C 40 900, 180 820, 110 720 S 40 540, 110 440 S 180 260, 110 160 S 70 60, 110 0"/>
+    <path class="vine hi" d="M114 1000 C 44 900, 184 820, 114 720 S 44 540, 114 440 S 184 260, 114 160 S 74 60, 114 0"/>
+    <g>
+      <path class="leaf" style="transition-delay:.15s" d="M98 900 c-30-26-62-16-74-2 c20 14 50 20 74 2z"/>
+      <path class="leaf" style="transition-delay:.35s" d="M128 780 c30-26 62-16 74-2 c-20 14-50 20-74 2z"/>
+      <path class="leaf" style="transition-delay:.55s" d="M92 620 c-30-26-62-16-74-2 c20 14 50 20 74 2z"/>
+      <path class="leaf" style="transition-delay:.75s" d="M130 480 c30-26 62-16 74-2 c-20 14-50 20-74 2z"/>
+      <path class="leaf" style="transition-delay:.95s" d="M94 330 c-30-26-62-16-74-2 c20 14 50 20 74 2z"/>
+      <path class="leaf" style="transition-delay:1.15s" d="M128 200 c30-26 62-16 74-2 c-20 14-50 20-74 2z"/>
+    </g>
+  </svg>
+  <div class="ground"></div>
+</div>
+
+<main>
+  <div class="card" id="card">
+    <div class="beans" aria-hidden="true"><i style="background:#d9584a"></i><i style="background:#e3a52a"></i><i style="background:#5fae4e"></i><i style="background:#4d8fd8"></i><i style="background:#9b6ad6"></i></div>
+    <h1>Beanstalk Me</h1>
+    <p class="rhyme">Fee-fi-fo-fum, say the word and up you come.</p>
+    <p class="sub">This beanstalk only grows for invited guests. Type the magic word to climb up and sign in.</p>
+    <form id="form" autocomplete="off">
+      <label for="pw">The magic word</label>
+      <div class="field">
+        <input id="pw" name="password" type="password" required autofocus autocomplete="current-password" spellcheck="false" />
+        <button class="show" id="show" type="button" aria-label="Show the magic word" aria-pressed="false">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <button class="go" id="go" type="submit"><span class="bean-icon" aria-hidden="true"></span><span id="goText">Plant the beans</span></button>
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    </form>
+    <p class="foot">MCON 368 project. Just curious? <a href="/feedback">See what people thought of it</a>.</p>
+  </div>
+</main>
+
+<script>
+  // a sky full of stars
+  const stars = document.getElementById("stars");
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement("i");
+    s.style.left = Math.random() * 100 + "%";
+    s.style.top = Math.random() * 45 + "%";
+    s.style.animationDelay = (Math.random() * 3).toFixed(2) + "s";
+    stars.append(s);
+  }
+
+  const form = document.getElementById("form"), pw = document.getElementById("pw"), msg = document.getElementById("msg");
+  const go = document.getElementById("go"), goText = document.getElementById("goText"), card = document.getElementById("card");
+  const show = document.getElementById("show");
+  show.addEventListener("click", () => {
+    const on = pw.type === "password";
+    pw.type = on ? "text" : "password";
+    show.setAttribute("aria-pressed", String(on));
+    show.setAttribute("aria-label", on ? "Hide the magic word" : "Show the magic word");
+    pw.focus();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!pw.value.trim()) { pw.focus(); return; }
+    go.disabled = true; goText.textContent = "Planting…"; msg.textContent = ""; msg.className = "msg";
+    try {
+      const r = await fetch("/gate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw.value }) });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Something went wrong. Try again.");
+      msg.className = "msg ok"; msg.textContent = "The beanstalk is growing…";
+      goText.textContent = "Climbing!";
+      document.body.classList.add("grow");
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setTimeout(() => location.replace(location.pathname === "/gate" ? "/" : location.href), reduce ? 200 : 1700);
+    } catch (err) {
+      msg.textContent = err.message;
+      card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+      go.disabled = false; goText.textContent = "Plant the beans";
+      pw.select();
+    }
+  });
+</script>
+</body>
+</html>

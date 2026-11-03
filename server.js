@@ -18,6 +18,7 @@ import { layoutWords, PAGE_W } from "./lib/layout.js";
 import { log, httpLog } from "./lib/log.js";
 import * as db from "./lib/db.js";
 import { setupAuth, requireUser, DEV_LOGIN } from "./lib/auth.js";
+import { setupGate } from "./lib/gate.js";
 import { runAiFeedback } from "./lib/personas.js";
 
 // Secrets come ONLY from the environment (Render → Environment, or .env locally).
@@ -35,6 +36,7 @@ await db.migrate();
 
 const app = express();
 app.use(httpLog);
+setupGate(app); // the site password, before sign-in is even shown
 setupAuth(app);
 app.use(express.json({ limit: "2mb" }));
 
