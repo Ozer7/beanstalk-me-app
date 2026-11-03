@@ -447,7 +447,10 @@ async function bookPayload(userId, book) {
   const [finished, running] = await Promise.all([db.imagesSince(book.id, book.updated_at), db.runningJobs(book.id)]);
   let changed = false;
   const seen = new Set();
-  for (const row of finished) {
+  // Jack first, then his sheet (it needs Jack), then pages; newest of each.
+  const order = { reference: 0, sheet: 1, page: 2 };
+  const rows = [...finished].sort((a, b) => order[a.kind] - order[b.kind] || new Date(b.created_at) - new Date(a.created_at));
+  for (const row of rows) {
     const key = row.kind === "page" ? `page${row.page_id}` : row.kind;
     if (seen.has(key)) continue; // newest of each only
     seen.add(key);
@@ -465,7 +468,8 @@ async function bookPayload(userId, book) {
     } else if (row.kind === "reference" && !state.jack) {
       state.jack = { image: url }; state.jackHistory = []; state.jackVersion = (state.jackVersion || 0) + 1; changed = true;
     } else if (row.kind === "sheet" && state.jack && !state.sheet) {
-      state.sheet = { image: url, views: row.meta.views || [], viewsV: 2, jackVersion: state.jackVersion }; changed = true;
+      // A sheet is only drawn after Jack was approved.
+      state.sheet = { image: url, views: row.meta.views || [], viewsV: 2, jackVersion: state.jackVersion }; state.jackApproved = true; changed = true;
     }
   }
   if (changed) await db.saveBookState(userId, book.id, state);
