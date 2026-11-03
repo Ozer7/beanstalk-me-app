@@ -11,11 +11,11 @@
 - [x] **Cheap test mode**: `IMAGE_QUALITY=low`, `MOCK_IMAGES=1`
 - [x] **10 real responses**: CloudResearch Connect, survey built in Engage, all 10 passed the attention check → [feedback/human-responses.json](feedback/human-responses.json)
 - [x] **10 AI responses** from 10 different personas (`lib/personas.js`)
-- [x] **Compare** the two sets → https://beanstalk-me-app.onrender.com/feedback
+- [x] **Compare** the two sets → https://feedback.bluebid.online
 - [x] **Use the feedback**: painted style, hands check, page 3 mother (below)
 
 ## What the feedback says
-Real people (10, 1–5): **likeness 3.8, story 3.7, professional 3.5**; 99¢ for 20 pages: 4 yes, 3 maybe, 3 no. Full side-by-side with the AI reviewers: https://beanstalk-me-app.onrender.com/feedback
+Real people (10, 1–5): **likeness 3.8, story 3.7, professional 3.5**; 99¢ for 20 pages: 4 yes, 3 maybe, 3 no. Full side-by-side with the AI reviewers: https://feedback.bluebid.online
 
 - **Likeness works because of the glasses and beard.** Eight people gave it a 4. Two said the head is drawn wider/shorter than in the photo.
 - **The art style is the main complaint.** 5 of 10 called it generic, "Disney-like", glossy, cartoony or "obviously AI"; 2 asked for hand-drawn or painted.

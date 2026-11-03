@@ -11,7 +11,7 @@ Earlier homeworks are frozen and still running, each from its own repo or branch
 ## Feedback
 
 - **Survey** (Engage, sent to 10 paid people on CloudResearch Connect): https://beanstalk-me-app.onrender.com/survey is the book they saw.
-- **10 real vs 10 AI responses, compared**: https://beanstalk-me-app.onrender.com/feedback
+- **10 real vs 10 AI responses, compared**: https://feedback.bluebid.online (also https://beanstalk-me-app.onrender.com/feedback)
 - **How the 10 AI reviewers differ** (`lib/personas.js`): a persona grid (relation to the child, expertise, age, how much they care), a "lens" (what each looks at first), a temperament and survey style (one rushed crowd worker), independent calls with a different page order each, and a measured check: answers are embedded, and any answer with cosine similarity above 0.92 to an earlier one is redone with a new lens.
 - **What changed because of it**: a painted storybook style, a hands check, and an angry mother on page 3 (see to-do.md).
 
